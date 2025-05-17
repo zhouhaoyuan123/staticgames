@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Platform</title>
+    <link rel="stylesheet" href="styles.css">
+	<script>
+		function loadScript(url, callback) {
+			var script = document.createElement("script");
+			script.type = "text/javascript";
+			script.src = url;
+			script.onload = callback;
+			document.head.appendChild(script);
+		}
+		loadScript("games.js?="+Date.now(), function() {
+			console.log("Game list loaded");
+		});
+	</script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>Game Platform</h1>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search games...">
+            <button onclick="searchGames()">Search</button>
+            <button onclick="resetFilters()">Reset</button>
+            <div id="tagCloud"></div>
+        </div>
+    </div>
+    <div id="gameList"></div>
+    <div id="pagination"></div>
+    <div id="fullscreenOverlay" class="hidden">
+        <div class="frame-container">
+            <button class="close-btn" onclick="closeFrame()">×</button>
+            <iframe id="gameFrame"></iframe>
+        </div>
+        <div id="recommendations"></div>
+    </div>
+</body>
+</html>
