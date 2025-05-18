@@ -25,6 +25,7 @@
         // Game variables
 		const food_threshold = 5;
 		const food_lim = 100;
+        const size_lim = 30;
         let player = { x: canvas.width/2, y: canvas.height/2, size: 10, speed: 3, color: '#4CAF50', invincible: false, direction: 0 };
         let score = 0, gameRunning = true, food = [], enemies = [], traps = [], keys = {};
         let lastTrapChange = 0, trapChangeInterval = 5000;
@@ -102,6 +103,7 @@
                 const f = food[i];
                 if (Math.hypot(player.x - f.x, player.y - f.y) < player.size + f.size) {
                     player.size += 0.5;
+                    player.size = Math.min(player.size, size_lim);
                     score += 10;
                     document.getElementById('sizeDisplay').textContent = Math.floor(player.size);
                     document.getElementById('scoreDisplay').textContent = score;
@@ -204,6 +206,7 @@
                 if (!player.invincible && Math.hypot(player.x - enemy.x, player.y - enemy.y) < player.size + enemy.size) {
                     if (player.size > enemy.size * 0.8) {
                         player.size += enemy.size * 0.2;
+                        player.size = Math.min(player.size, size_lim);
                         score += 50;
                         enemies.splice(enemies.indexOf(enemy), 1);
                         spawnEnemies(1);
