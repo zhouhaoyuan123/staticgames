@@ -1,0 +1,4 @@
+Make a game platform that consists of only static pages , the game data (eg name author url email etc)  
+should be hardcoded into a seperate javascript file 
+the games should be organized by tags , there should also be a recomendation system
+                    

@@ -7,7 +7,16 @@ const gameDatabase = [
         author: "Aaron",
         url: "games/rocket.html",
         email: "a@example.com",
-        tags: ["singleplayer"],
+        tags: ["singleplayer","Aaron"],
+        popularity: 0
+    },
+    {
+        id: 2,
+        name: "Fish Game",
+        author: "Aaron",
+        url: "games/fish_game.html",
+        email: "a@example.com",
+        tags: ["singleplayer","Aaron"],
         popularity: 0
     },
     // Add more games...

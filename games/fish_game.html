@@ -1,0 +1,443 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Fish Survival</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); }
+        #gameCanvas { display: block; background-color: #0077be; }
+        #ui { position: absolute; top: 10px; left: 10px; color: white; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 40px; text-align: center; display: none; }
+        #restartBtn { padding: 10px 20px; font-size: 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">Size: <span id="sizeDisplay">1</span> | Score: <span id="scoreDisplay">0</span></div>
+    <div id="gameOver">Game Over!<br><span id="finalScore"></span><br><button id="restartBtn">Play Again</button></div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Game variables
+		const food_threshold = 5;
+		const food_lim = 100;
+        let player = { x: canvas.width/2, y: canvas.height/2, size: 10, speed: 3, color: '#4CAF50', invincible: false, direction: 0 };
+        let score = 0, gameRunning = true, food = [], enemies = [], traps = [], keys = {};
+        let lastTrapChange = 0, trapChangeInterval = 5000;
+        let lastEnemySpawn = 0, enemySpawnInterval = 2000;
+
+        // Event listeners
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+        document.getElementById('restartBtn').addEventListener('click', resetGame);
+
+        function init() {
+            spawnFood(20);
+            spawnEnemies(5);
+            spawnTraps(3);
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            const now = Date.now();
+            
+            // Spawn new enemies periodically
+            if (now - lastEnemySpawn > enemySpawnInterval) {
+                spawnEnemies(1 + Math.floor(score/500));
+                lastEnemySpawn = now;
+            }
+
+            // Player movement with direction tracking
+            let moved = false;
+            if (keys['ArrowUp'] || keys['w']) { player.y -= player.speed; player.direction = -Math.PI/2; moved = true; }
+            if (keys['ArrowDown'] || keys['s']) { player.y += player.speed; player.direction = Math.PI/2; moved = true; }
+            if (keys['ArrowLeft'] || keys['a']) { player.x -= player.speed; player.direction = Math.PI; moved = true; }
+            if (keys['ArrowRight'] || keys['d']) { player.x += player.speed; player.direction = 0; moved = true; }
+            if (moved && keys['ArrowLeft'] && keys['ArrowUp']) player.direction = -3*Math.PI/4;
+            if (moved && keys['ArrowLeft'] && keys['ArrowDown']) player.direction = 3*Math.PI/4;
+            if (moved && keys['ArrowRight'] && keys['ArrowUp']) player.direction = -Math.PI/4;
+            if (moved && keys['ArrowRight'] && keys['ArrowDown']) player.direction = Math.PI/4;
+
+            // Boundary check with bounce
+            if (player.x <= player.size) { 
+                player.x = player.size; 
+                player.direction = 0; 
+                if (keys['ArrowLeft'] || keys['a']) player.direction = Math.PI; 
+            }
+            if (player.x >= canvas.width - player.size) { 
+                player.x = canvas.width - player.size; 
+                player.direction = Math.PI; 
+                if (keys['ArrowRight'] || keys['d']) player.direction = 0; 
+            }
+            if (player.y <= player.size) { 
+                player.y = player.size; 
+                player.direction = Math.PI/2; 
+                if (keys['ArrowUp'] || keys['w']) player.direction = -Math.PI/2; 
+            }
+            if (player.y >= canvas.height - player.size) { 
+                player.y = canvas.height - player.size; 
+                player.direction = -Math.PI/2; 
+                if (keys['ArrowDown'] || keys['s']) player.direction = Math.PI/2; 
+            }
+
+            // Dynamic trap changes
+            if (now - lastTrapChange > trapChangeInterval) {
+                changeTraps();
+                lastTrapChange = now;
+            }
+
+            // Food collision
+            for (let i = food.length - 1; i >= 0; i--) {
+                const f = food[i];
+                if (Math.hypot(player.x - f.x, player.y - f.y) < player.size + f.size) {
+                    player.size += 0.5;
+                    score += 10;
+                    document.getElementById('sizeDisplay').textContent = Math.floor(player.size);
+                    document.getElementById('scoreDisplay').textContent = score;
+                    food.splice(i, 1);
+                    if (Math.random() < 0.3) spawnFood(1);
+                }
+            }
+
+            // Enhanced enemy AI
+            for (let enemy of enemies) {
+                // Boundary check with bounce for enemies
+                if (enemy.x <= enemy.size || enemy.x >= canvas.width - enemy.size) {
+                    enemy.direction = Math.PI - enemy.direction;
+                }
+                if (enemy.y <= enemy.size || enemy.y >= canvas.height - enemy.size) {
+                    enemy.direction = -enemy.direction;
+                }
+                // Movement based on direction
+                enemy.x += Math.cos(enemy.direction) * enemy.speed;
+                enemy.y += Math.sin(enemy.direction) * enemy.speed;
+
+                // AI behaviors
+                let closestFood = null;
+                let closestEnemy = null;
+				let closestEnemy2 = null;
+                let minFoodDist = Infinity;
+                let minEnemyDist = Infinity;
+				let minEnemyDist2 = Infinity;
+
+                // Find closest food and enemy
+                for (let f of food) {
+                    const dist = Math.hypot(enemy.x - f.x, enemy.y - f.y);
+                    if (dist < minFoodDist) {
+                        minFoodDist = dist;
+                        closestFood = f;
+                    }
+                }
+
+                for (let other of enemies) {
+                    if (other !== enemy && other.size < enemy.size * 0.8) {
+                        const dist = Math.hypot(enemy.x - other.x, enemy.y - other.y);
+                        if (dist < minEnemyDist) {
+                            minEnemyDist = dist;
+                            closestEnemy = other;
+                        }
+                    }
+					else if(other !== enemy && other.size > enemy.size) {
+						const dist = Math.hypot(enemy.x - other.x, enemy.y - other.y);
+                        if (dist < minEnemyDist2) {
+                            minEnemyDist2 = dist;
+                            closestEnemy2 = other;
+                        }
+					}
+                }
+				
+                // Decide behavior based on what's nearby
+				if(closestEnemy2 && minEnemyDist2 < 200) {
+					enemy.direction = Math.atan2(enemy.y - closestEnemy2.y, enemy.x - closestEnemy2.x);
+				}
+                else if (closestEnemy && minEnemyDist < 200) {
+                    // Chase smaller enemy
+                    enemy.direction = Math.atan2(closestEnemy.y - enemy.y, closestEnemy.x - enemy.x);
+                } else if (closestFood && minFoodDist < 150) {
+                    // Chase food
+                    enemy.direction = Math.atan2(closestFood.y - enemy.y, closestFood.x - enemy.x);
+                } else if (Math.hypot(player.x - enemy.x, player.y - enemy.y) < 300) {
+                    if (player.size > enemy.size * 0.8) {
+                        // Flee from player
+                        enemy.direction = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                    } else {
+                        // Chase player
+                        enemy.direction = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                    }
+                } else if (Math.random() < 0.02) {
+                    // Random direction change
+                    enemy.direction = Math.random() * Math.PI * 2;
+                }
+
+                // Enemy eats food
+                for (let i = food.length - 1; i >= 0; i--) {
+                    const f = food[i];
+                    if (Math.hypot(enemy.x - f.x, enemy.y - f.y) < enemy.size + f.size && Math.random() < 0.2) {
+                        enemy.size += 0.3;
+                        food.splice(i, 1);
+                    }
+                }
+
+                // Enemy eats smaller enemies
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const other = enemies[i];
+                    if (other !== enemy && enemy.size > other.size * 1.2 && 
+                        Math.hypot(enemy.x - other.x, enemy.y - other.y) < enemy.size + other.size) {
+                        enemy.size += other.size * 0.2;
+                        enemies.splice(i, 1);
+                        spawnEnemies(1);
+                    }
+                }
+
+                // Player collision with enemies
+                if (!player.invincible && Math.hypot(player.x - enemy.x, player.y - enemy.y) < player.size + enemy.size) {
+                    if (player.size > enemy.size * 0.8) {
+                        player.size += enemy.size * 0.2;
+                        score += 50;
+                        enemies.splice(enemies.indexOf(enemy), 1);
+                        spawnEnemies(1);
+                    } else {
+                        player.invincible = true;
+                        setTimeout(() => player.invincible = false, 3000);
+                        if (Math.random() < 0.3) gameOver();
+                    }
+                }
+				else {// Trap collision
+					var collision = true;
+					for (let trap of traps) {
+						if (Math.hypot(enemy.x - trap.x, enemy.y - trap.y) < enemy.size + trap.size) {
+							if (Math.random() < 0.5) {enemies.splice(enemies.indexOf(enemy), 1);break;}
+						}
+					}
+				}
+            }
+
+            // Trap collision
+            for (let trap of traps) {
+                if (!player.invincible && Math.hypot(player.x - trap.x, player.y - trap.y) < player.size + trap.size) {
+                    player.invincible = true;
+                    setTimeout(() => player.invincible = false, 3000);
+                    if (Math.random() < 0.5) gameOver();
+                }
+            }
+			if(food.length < food_threshold) spawnFood(food_threshold - food.length);
+			else if(Math.random() < 0.3 && food.length < food_lim) spawnFood(1);
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0, 119, 190, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw food
+            for (let f of food) {
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+                ctx.fillStyle = f.color;
+                ctx.fill();
+            }
+
+            // Draw enemies with direction
+            for (let enemy of enemies) {
+                ctx.save();
+                ctx.translate(enemy.x, enemy.y);
+                ctx.rotate(enemy.direction);
+                
+                // Body
+                ctx.beginPath();
+                ctx.ellipse(0, 0, enemy.size, enemy.size/1.5, 0, 0, Math.PI * 2);
+                ctx.fillStyle = enemy.color;
+                ctx.fill();
+                
+                // Eyes
+                ctx.beginPath();
+                ctx.arc(-enemy.size/2, -enemy.size/4, enemy.size/4, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(-enemy.size/2, -enemy.size/4, enemy.size/8, 0, Math.PI * 2);
+                ctx.fillStyle = 'black';
+                ctx.fill();
+                
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(enemy.size, 0);
+                ctx.lineTo(enemy.size * 1.5, -enemy.size/2);
+                ctx.lineTo(enemy.size * 1.5, enemy.size/2);
+                ctx.closePath();
+                ctx.fillStyle = enemy.color;
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
+            // Draw traps
+            for (let trap of traps) {
+                if (trap.type === 'net') {
+                    ctx.fillStyle = 'rgba(200, 200, 200, 0.7)';
+                    ctx.fillRect(trap.x - trap.size, trap.y - trap.size, trap.size * 2, trap.size * 2);
+                    ctx.strokeStyle = 'rgba(100, 100, 100, 0.9)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(trap.x - trap.size, trap.y - trap.size, trap.size * 2, trap.size * 2);
+                } else if (trap.type === 'hook') {
+                    ctx.fillStyle = 'silver';
+                    ctx.beginPath();
+                    ctx.moveTo(trap.x, trap.y - trap.size);
+                    ctx.lineTo(trap.x + trap.size/2, trap.y);
+                    ctx.lineTo(trap.x, trap.y + trap.size/2);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = 'brown';
+                    ctx.fillRect(trap.x - trap.size/2, trap.y - trap.size, trap.size, trap.size * 2);
+                    ctx.fillStyle = 'pink';
+                    ctx.beginPath();
+                    ctx.arc(trap.x, trap.y - trap.size * 1.5, trap.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Draw player with direction
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.direction);
+            
+            // Body
+            ctx.beginPath();
+            ctx.ellipse(0, 0, player.size, player.size/1.5, 0, 0, Math.PI * 2);
+            ctx.fillStyle = player.invincible ? 
+                `hsla(120, 100%, 50%, ${0.5 + 0.5 * Math.sin(Date.now()/100)})` : player.color;
+            ctx.fill();
+            
+            // Eyes
+            ctx.beginPath();
+            ctx.arc(-player.size/2, -player.size/4, player.size/4, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(-player.size/2, -player.size/4, player.size/8, 0, Math.PI * 2);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            
+            // Tail
+            ctx.beginPath();
+            ctx.moveTo(player.size, 0);
+            ctx.lineTo(player.size * 1.5, -player.size/2);
+            ctx.lineTo(player.size * 1.5, player.size/2);
+            ctx.closePath();
+            ctx.fillStyle = player.invincible ? 
+                `hsla(120, 100%, 50%, ${0.5 + 0.5 * Math.sin(Date.now()/100)})` : player.color;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        function spawnFood(count) {
+            for (let i = 0; i < count; i++) {
+                food.push({
+                    x: Math.random() * (canvas.width - 20) + 10,
+                    y: Math.random() * (canvas.height - 20) + 10,
+                    size: Math.random() * 5 + 2,
+                    color: `hsl(${Math.random() * 60 + 30}, 100%, 50%)`
+                });
+            }
+        }
+
+        function spawnEnemies(count) {
+            for (let i = 0; i < count; i++) {
+                const size = Math.random() * 15 + player.size * 0.5;
+                enemies.push({
+                    x: Math.random() * (canvas.width - size * 2) + size,
+                    y: Math.random() * (canvas.height - size * 2) + size,
+                    size: size,
+                    speed: Math.random() * 2 + 1,
+                    color: `hsl(${Math.random() * 60 + 200}, 100%, 50%)`,
+                    direction: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function spawnTraps(count) {
+            const types = ['net', 'hook', 'fisherman'];
+            for (let i = 0; i < count; i++) {
+                const type = types[Math.floor(Math.random() * types.length)];
+                const size = type === 'net' ? Math.random() * 30 + 20 : 
+                             type === 'hook' ? Math.random() * 15 + 10 : 
+                             Math.random() * 15 + 10;
+                traps.push({
+                    x: Math.random() * (canvas.width - size * 2) + size,
+                    y: Math.random() * (canvas.height - size * 2) + size,
+                    size: size,
+                    type: type
+                });
+            }
+        }
+
+        function changeTraps() {
+            for (let i = 0; i < Math.max(1, traps.length/2); i++) {
+                const idx = Math.floor(Math.random() * traps.length);
+                const types = ['net', 'hook', 'fisherman'];
+                traps[idx].type = types[Math.floor(Math.random() * types.length)];
+                traps[idx].x = Math.random() * (canvas.width - traps[idx].size * 2) + traps[idx].size;
+                traps[idx].y = Math.random() * (canvas.height - traps[idx].size * 2) + traps[idx].size;
+            }
+        }
+
+        
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = `Final Score: ${score}`;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function resetGame() {
+            player = { 
+                x: canvas.width/2, 
+                y: canvas.height/2, 
+                size: 10, 
+                speed: 3, 
+                color: '#4CAF50', 
+                invincible: false, 
+                direction: 0 
+            };
+            score = 0;
+            document.getElementById('sizeDisplay').textContent = Math.floor(player.size);
+            document.getElementById('scoreDisplay').textContent = score;
+            food = [];
+            enemies = [];
+            traps = [];
+            gameRunning = true;
+            document.getElementById('gameOver').style.display = 'none';
+            spawnFood(20);
+            spawnEnemies(5);
+            spawnTraps(3);
+            lastTrapChange = Date.now();
+            lastEnemySpawn = Date.now();
+            gameLoop();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (!gameRunning) {
+                player.x = canvas.width/2;
+                player.y = canvas.height/2;
+            }
+        });
+
+        // Initialize game
+        init();
+    </script>
+</body>
+</html>
