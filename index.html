@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Platform</title>
+    <title>App & Game Platform</title>
     <link rel="stylesheet" href="styles.css">
 	<script>
 		function loadScript(url, callback) {
@@ -12,15 +12,16 @@
 			script.onload = callback;
 			document.head.appendChild(script);
 		}
-		loadScript("games.js?="+Date.now(), function() {
+		loadScript("game_list.js?="+Date.now(), function() {
 			console.log("Game list loaded");
 		});
 	</script>
+    <script src="games.js"></script>
     <script src="app.js"></script>
 </head>
 <body>
     <div class="header">
-        <h1>Game Platform</h1>
+        <h1>App & Game Platform</h1>
         <div class="controls">
             <input type="text" id="searchInput" placeholder="Search games...">
             <button onclick="searchGames()">Search</button>
