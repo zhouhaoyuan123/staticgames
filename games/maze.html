@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shifting Maze Game</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+        }
+        .info {
+            margin: 10px 0;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">HP: <span id="hp">50</span></div>
+    <div class="info">Keys: <span id="keys">0</span></div>
+    <canvas id="gameCanvas" width="450" height="450"></canvas>
+
+<script>
+const CELL_SIZE = 30;
+const COLS = 15;
+const ROWS = 15;
+const PLAYER_SIZE = 20;
+
+const gameState = {
+    maze: [],
+    player: { x: 7, y: 7, hp: 50, keys: 0 }, // Start in center
+    exit: { x: 14, y: 14, requiredKeys: 3 },
+    items: [],
+    hpItems: [],
+    shiftCounter: 0
+};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const VISION_RADIUS = 2;
+
+
+function initializeMaze() {
+    // Create initial maze structure
+    for(let y = 0; y < ROWS; y++) {
+        gameState.maze[y] = [];
+        for(let x = 0; x < COLS; x++) {
+            gameState.maze[y][x] = {
+                top: y === 0,
+                right: x === COLS-1,
+                bottom: y === ROWS-1,
+                left: x === 0
+            };
+        }
+    }
+    generatePaths();
+    placeItems();
+    ensurePlayerCanMove();
+}
+
+function ensurePlayerCanMove() {
+    // Guarantee at least one exit from player's current position
+    const cell = gameState.maze[gameState.player.y][gameState.player.x];
+    const walls = ['top', 'right', 'bottom', 'left'];
+    const wallCount = walls.filter(w => cell[w]).length;
+    
+    if(wallCount === 4) {
+        const exitDir = walls[Math.floor(Math.random()*4)];
+        cell[exitDir] = false;
+        
+        // Update adjacent cell's wall
+        switch(exitDir) {
+            case 'top':
+                if(gameState.player.y > 0) {
+                    gameState.maze[gameState.player.y-1][gameState.player.x].bottom = false;
+                }
+                break;
+            case 'right':
+                if(gameState.player.x < COLS-1) {
+                    gameState.maze[gameState.player.y][gameState.player.x+1].left = false;
+                }
+                break;
+            case 'bottom':
+                if(gameState.player.y < ROWS-1) {
+                    gameState.maze[gameState.player.y+1][gameState.player.x].top = false;
+                }
+                break;
+            case 'left':
+                if(gameState.player.x > 0) {
+                    gameState.maze[gameState.player.y][gameState.player.x-1].right = false;
+                }
+                break;
+        }
+    }
+}
+
+function generatePaths() {
+    // Generate random paths with guaranteed exits
+    for(let y = 0; y < ROWS; y++) {
+        for(let x = 0; x < COLS; x++) {
+            if(Math.random() < 0.3 && x < COLS-1) {
+                gameState.maze[y][x].right = false;
+                gameState.maze[y][x+1].left = false;
+            }
+            if(Math.random() < 0.3 && y < ROWS-1) {
+                gameState.maze[y][x].bottom = false;
+                gameState.maze[y+1][x].top = false;
+            }
+        }
+    }
+}
+
+function placeItems() {
+    // Place keys and HP items with collision checks
+    const placeItem = (collection) => {
+        let placed = false;
+        while(!placed) {
+            const x = Math.floor(Math.random() * (COLS-2)) + 1;
+            const y = Math.floor(Math.random() * (ROWS-2)) + 1;
+            if(!gameState.items.some(i => i.x === x && i.y === y) &&
+               !gameState.hpItems.some(h => h.x === x && h.y === y)) {
+                collection.push({x, y});
+                placed = true;
+            }
+        }
+    };
+
+    for(let i = 0; i < 3; i++) placeItem(gameState.items);
+    for(let i = 0; i < 2; i++) placeItem(gameState.hpItems);
+}
+
+function shiftMaze() {
+    // Random maze modification with player mobility check
+    for(let y = 0; y < ROWS; y++) {
+        for(let x = 0; x < COLS; x++) {
+            if(Math.random() < 0.1) {
+                const dir = ['top', 'right', 'bottom', 'left'][Math.floor(Math.random()*4)];
+                gameState.maze[y][x][dir] = !gameState.maze[y][x][dir];
+            }
+        }
+    }
+    ensurePlayerCanMove();
+    gameState.shiftCounter++;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 计算可见范围
+    const minX = Math.max(0, gameState.player.x - VISION_RADIUS);
+    const maxX = Math.min(COLS-1, gameState.player.x + VISION_RADIUS);
+    const minY = Math.max(0, gameState.player.y - VISION_RADIUS);
+    const maxY = Math.min(ROWS-1, gameState.player.y + VISION_RADIUS);
+
+    // 绘制可见范围内的墙壁
+    for(let y = minY; y <= maxY; y++) {
+        for(let x = minX; x <= maxX; x++) {
+            const cell = gameState.maze[y][x];
+            ctx.strokeStyle = '#000';
+            if(cell.top) ctx.fillRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, 2);
+            if(cell.right) ctx.fillRect((x+1)*CELL_SIZE-2, y*CELL_SIZE, 2, CELL_SIZE);
+            if(cell.bottom) ctx.fillRect(x*CELL_SIZE, (y+1)*CELL_SIZE-2, CELL_SIZE, 2);
+            if(cell.left) ctx.fillRect(x*CELL_SIZE, y*CELL_SIZE, 2, CELL_SIZE);
+        }
+    }
+
+    // 仅在可见范围内绘制元素
+    const shouldRender = (x, y) => 
+        x >= minX && x <= maxX && 
+        y >= minY && y <= maxY;
+
+    // 绘制玩家
+    ctx.fillStyle = '#00f';
+    ctx.fillRect(
+        gameState.player.x*CELL_SIZE + (CELL_SIZE-PLAYER_SIZE)/2,
+        gameState.player.y*CELL_SIZE + (CELL_SIZE-PLAYER_SIZE)/2,
+        PLAYER_SIZE,
+        PLAYER_SIZE
+    );
+
+    // 绘制出口（仅在可见时）
+    if(shouldRender(gameState.exit.x, gameState.exit.y)) {
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(gameState.exit.x*CELL_SIZE, gameState.exit.y*CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    }
+
+    // 绘制钥匙和血包（仅在可见时）
+    [gameState.items, gameState.hpItems].forEach((items, index) => {
+        ctx.fillStyle = index === 0 ? '#ff0' : '#f00';
+        items.forEach(item => {
+            if(shouldRender(item.x, item.y)) {
+                if(index === 0) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        item.x*CELL_SIZE + CELL_SIZE/2,
+                        item.y*CELL_SIZE + CELL_SIZE/2,
+                        CELL_SIZE/4, 0, Math.PI*2
+                    );
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(
+                        item.x*CELL_SIZE + CELL_SIZE/4,
+                        item.y*CELL_SIZE + CELL_SIZE/4,
+                        CELL_SIZE/2,
+                        CELL_SIZE/2
+                    );
+                }
+            }
+        });
+    });
+}
+function checkEscapeRoute() {
+    // 使用BFS算法检测逃生路径
+    const visited = new Array(ROWS).fill().map(() => new Array(COLS).fill(false));
+    const queue = [[gameState.player.y, gameState.player.x]];
+    const directions = [[-1,0], [1,0], [0,-1], [0,1]]; // 上下左右
+    
+    while(queue.length > 0) {
+        const [y, x] = queue.shift();
+        if(y === gameState.exit.y && x === gameState.exit.x) return true;
+        
+        for(const [dy, dx] of directions) {
+            const ny = y + dy;
+            const nx = x + dx;
+            if(ny >= 0 && ny < ROWS && nx >= 0 && nx < COLS && 
+               !visited[ny][nx] && !hasWallBetween(y, x, ny, nx)) {
+                visited[ny][nx] = true;
+                queue.push([ny, nx]);
+            }
+        }
+    }
+    return false;
+}
+
+function hasWallBetween(y1, x1, y2, x2) {
+    // 判断两个相邻单元格间的墙体
+    if(y2 === y1+1) return gameState.maze[y1][x1].bottom; // 下
+    if(y2 === y1-1) return gameState.maze[y1][x1].top;    // 上
+    if(x2 === x1+1) return gameState.maze[y1][x1].right;  // 右
+    if(x2 === x1-1) return gameState.maze[y1][x1].left;   // 左
+    return true;
+}
+
+function ensureEscape() {
+    if(checkEscapeRoute()) return;
+    
+    // 找不到逃生路径时自动破墙
+    const breakableWalls = [];
+    for(let y = 0; y < ROWS; y++) {
+        for(let x = 0; x < COLS; x++) {
+            const cell = gameState.maze[y][x];
+            if(cell.top && y > 0) breakableWalls.push({y, x, dir: 'top'});
+            if(cell.bottom && y < ROWS-1) breakableWalls.push({y, x, dir: 'bottom'});
+            if(cell.left && x > 0) breakableWalls.push({y, x, dir: 'left'});
+            if(cell.right && x < COLS-1) breakableWalls.push({y, x, dir: 'right'});
+        }
+    }
+    
+    // 随机选择两个墙壁破除
+    for(let i = 0; i < 2 && breakableWalls.length > 0; i++) {
+        const idx = Math.floor(Math.random() * breakableWalls.length);
+        const {y, x, dir} = breakableWalls.splice(idx, 1)[0];
+        gameState.maze[y][x][dir] = false;
+        
+        // 同步更新相邻单元格
+        switch(dir) {
+            case 'top': gameState.maze[y-1][x].bottom = false; break;
+            case 'bottom': gameState.maze[y+1][x].top = false; break;
+            case 'left': gameState.maze[y][x-1].right = false; break;
+            case 'right': gameState.maze[y][x+1].left = false; break;
+        }
+    }
+}
+
+function gameLoop() {
+	ensureEscape();
+    if(gameState.shiftCounter % (10 - gameState.player.keys) === 0) {
+        shiftMaze();
+    }
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener('keydown', (e) => {
+    let dx = 0, dy = 0;
+    switch(e.key) {
+        case 'ArrowUp': dy = -1; break;
+        case 'ArrowDown': dy = 1; break;
+        case 'ArrowLeft': dx = -1; break;
+        case 'ArrowRight': dx = 1; break;
+    }
+    
+    const newX = gameState.player.x + dx;
+    const newY = gameState.player.y + dy;
+    
+    if(newX < 0 || newX >= COLS || newY < 0 || newY >= ROWS) return;
+    
+    // Wall collision detection
+    const originalCell = gameState.maze[gameState.player.y][gameState.player.x];
+    let wallHit = false;
+    
+    if(dx === 1 && originalCell.right) wallHit = true;
+    if(dx === -1 && originalCell.left) wallHit = true;
+    if(dy === 1 && originalCell.bottom) wallHit = true;
+    if(dy === -1 && originalCell.top) wallHit = true;
+    
+    if(wallHit) {
+        gameState.player.hp -= 10;
+        if(gameState.player.hp <= 0) {
+            alert('Game Over!');
+            location.reload();
+        }
+        document.getElementById('hp').textContent = gameState.player.hp;
+    }
+    
+    gameState.player.x = newX;
+    gameState.player.y = newY;
+    
+    // Item collection
+    const itemIndex = gameState.items.findIndex(
+        item => item.x === newX && item.y === newY
+    );
+    if(itemIndex > -1) {
+        gameState.items.splice(itemIndex, 1);
+        gameState.player.keys++;
+        document.getElementById('keys').textContent = gameState.player.keys;
+    }
+    
+    const hpIndex = gameState.hpItems.findIndex(
+        item => item.x === newX && item.y === newY
+    );
+    if(hpIndex > -1) {
+        gameState.hpItems.splice(hpIndex, 1);
+        gameState.player.hp = Math.min(50, gameState.player.hp + 20);
+        document.getElementById('hp').textContent = gameState.player.hp;
+    }
+    
+    if(newX === gameState.exit.x && newY === gameState.exit.y &&
+       gameState.player.keys >= gameState.exit.requiredKeys) {
+        alert('Congratulations! You escaped!');
+        location.reload();
+    }
+    
+    gameState.shiftCounter++;
+});
+
+initializeMaze();
+gameLoop();
+</script>
+</body>
+</html>

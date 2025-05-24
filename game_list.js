@@ -18,5 +18,14 @@ const gameDatabase = [
         tags: ["singleplayer","Aaron"],
         popularity: 0
     },
+    {
+        id: 3,
+        name: "Maze Game",
+        author: "Aaron",
+        url: "games/maze.html",
+        email: "a@example.com",
+        tags: ["singleplayer","Aaron"],
+        popularity: 0
+    },
     // Add more games...
 ];
