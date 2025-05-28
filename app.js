@@ -69,21 +69,69 @@ function renderPagination(totalGames = gameDatabase.length) {
     const pageCount = Math.ceil(totalGames / gamesPerPage);
     let paginationHTML = '';
     
-    for (let i = 1; i <= pageCount; i++) {
-        paginationHTML += `
-            <button class="page-btn ${i === currentPage ? 'active' : ''}" 
-                    onclick="changePage(${i})">
-                ${i}
-            </button>
-        `;
-    }
+    // Previous button
+    paginationHTML += `
+        <button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                onclick="changePage(${currentPage - 1})" 
+                ${currentPage === 1 ? 'disabled' : ''}>
+            Previous
+        </button>
+    `;
+    
+    // Page input and total pages
+    paginationHTML += `
+        <div class="page-info">
+            Page 
+            <input type="number" 
+                   id="pageInput" 
+                   value="${currentPage}" 
+                   min="1" 
+                   max="${pageCount}"
+                   onchange="jumpToPage(this.value)"
+                   onkeypress="handlePageInputKeypress(event)">
+            of ${pageCount}
+        </div>
+    `;
+    
+    // Next button
+    paginationHTML += `
+        <button class="page-btn ${currentPage === pageCount ? 'disabled' : ''}" 
+                onclick="changePage(${currentPage + 1})" 
+                ${currentPage === pageCount ? 'disabled' : ''}>
+            Next
+        </button>
+    `;
     
     document.getElementById('pagination').innerHTML = paginationHTML;
 }
 
 function changePage(page) {
-    currentPage = page;
-    applyFilters();
+    const totalGames = gameDatabase.filter(game => {
+        const matchesSearch = game.name.toLowerCase().includes(currentFilters.searchTerm) || 
+                            game.author.toLowerCase().includes(currentFilters.searchTerm);
+        const matchesTags = currentFilters.activeTags.length === 0 || 
+                          currentFilters.activeTags.every(tag => game.tags.includes(tag));
+        return matchesSearch && matchesTags;
+    }).length;
+    const pageCount = Math.ceil(totalGames / gamesPerPage);
+    
+    if (page >= 1 && page <= pageCount) {
+        currentPage = page;
+        applyFilters();
+    }
+}
+
+function jumpToPage(page) {
+    const pageNum = parseInt(page, 10);
+    if (!isNaN(pageNum)) {
+        changePage(pageNum);
+    }
+}
+
+function handlePageInputKeypress(event) {
+    if (event.key === 'Enter') {
+        jumpToPage(event.target.value);
+    }
 }
 
 function loadGame(id) {
