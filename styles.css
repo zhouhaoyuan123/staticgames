@@ -27,6 +27,20 @@
     background: #eee; 
     cursor: pointer; 
     border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+.tag:hover {
+    background: #ddd;
+}
+
+.tag.active {
+    background: #4CAF50;
+    color: white;
+}
+
+.tag.active:hover {
+    background: #45a049;
 }
 
 #gameList { 

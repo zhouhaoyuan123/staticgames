@@ -14,9 +14,10 @@ function init() {
 function renderTagCloud() {
     const allTags = [...new Set(gameDatabase.flatMap(g => g.tags))];
     const container = document.getElementById('tagCloud');
-    container.innerHTML = allTags.map(tag => 
-        `<span class="tag" onclick="toggleTagFilter('${tag}')">${tag}</span>`
-    ).join('');
+    container.innerHTML = allTags.map(tag => {
+        const isActive = currentFilters.activeTags.includes(tag);
+        return `<span class="tag ${isActive ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tag}</span>`;
+    }).join('');
 }
 
 function toggleTagFilter(tag) {
@@ -50,6 +51,7 @@ function applyFilters() {
     });
     displayGames(results);
     renderPagination(results.length);
+    renderTagCloud(); // Re-render tag cloud to update active states
 }
 
 function displayGames(games) {
