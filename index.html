@@ -4,19 +4,46 @@
 <head>
     <title>App & Game Platform</title>
     <meta name="description" content="Discover and play a variety of static apps and games on our platform. Find your favorites and explore new experiences.">
-    <link rel="stylesheet" href="styles.css">
-	<script>
-		function loadScript(url, callback) {
-			var script = document.createElement("script");
-			script.type = "text/javascript";
-			script.src = url;
-			script.onload = callback;
-			document.head.appendChild(script);
-		}
-		loadScript("game_list.js?="+Date.now(), function() {
-			console.log("Game list loaded");
-		});
-	</script>
+    <script>
+        // Theme loading functionality
+        function getThemeFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('theme') || 'default';
+        }
+        
+        function loadTheme() {
+            const theme = getThemeFromURL();
+            const cssFile = theme === 'default' ? 'styles.css' : `themes/${theme}.css`;
+            
+            // Create and load the CSS file
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssFile;
+            link.onerror = function() {
+                // Fallback to default theme if theme file doesn't exist
+                console.warn(`Theme '${theme}' not found, falling back to default`);
+                const fallbackLink = document.createElement('link');
+                fallbackLink.rel = 'stylesheet';
+                fallbackLink.href = 'styles.css';
+                document.head.appendChild(fallbackLink);
+            };
+            document.head.appendChild(link);
+        }
+        
+        // Load theme before other scripts
+        loadTheme();
+        
+        function loadScript(url, callback) {
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = url;
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+        loadScript("game_list.js?="+Date.now(), function() {
+            console.log("Game list loaded");
+        });
+    </script>
     <script src="games.js"></script>
     <script src="app.js"></script>
 </head>

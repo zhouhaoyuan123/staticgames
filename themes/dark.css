@@ -1,0 +1,229 @@
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+.header { 
+    padding: 20px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #444;
+}
+
+.header h1 {
+    color: #ffffff;
+    margin: 0;
+}
+
+.controls { 
+    display: flex; 
+    gap: 10px; 
+    margin: 15px 0; 
+}
+
+#searchInput {
+    background: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+#searchInput::placeholder {
+    color: #999;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+#tagCloud { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 5px; 
+}
+
+.tag { 
+    padding: 5px 10px; 
+    background: #444; 
+    cursor: pointer; 
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+    color: #e0e0e0;
+}
+
+.tag:hover {
+    background: #555;
+}
+
+.tag.active {
+    background: #4CAF50;
+    color: white;
+}
+
+.tag.active:hover {
+    background: #45a049;
+}
+
+#gameList { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px; 
+    padding: 20px;
+}
+
+.game-card { 
+    border: 1px solid #444; 
+    padding: 15px; 
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.2s;
+    background: #2d2d2d;
+    color: #e0e0e0;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border-color: #4CAF50;
+}
+
+.game-card h3 {
+    color: #ffffff;
+    margin-top: 0;
+}
+
+#pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    gap: 15px;
+}
+
+.page-btn {
+    padding: 8px 12px;
+    border: 1px solid #555;
+    background: #333;
+    color: #e0e0e0;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.page-btn:hover:not(.disabled) {
+    background: #444;
+}
+
+.page-btn.disabled {
+    background: #2d2d2d;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.page-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+#pageInput {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    text-align: center;
+    background: #333;
+    color: #e0e0e0;
+}
+
+#fullscreenOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.frame-container {
+    position: relative;
+    height: 80vh;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 1001;
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    background: #444;
+}
+
+#gameFrame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+    border-radius: 5px;
+}
+
+#recommendations {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 20vh;
+    overflow-y: auto;
+    border: 1px solid #444;
+}
+
+#recommendations h3 {
+    color: #ffffff;
+    margin-top: 0;
+}
+
+.rec-item {
+    padding: 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+}
+
+.rec-item:hover {
+    background: #333;
+}
+
+.hidden {
+    display: none;
+}
