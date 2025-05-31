@@ -36,5 +36,14 @@ const gameDatabase = [
         tags: ["docs"],
         popularity: 10
     },
+    {
+        id: 5,
+        name: "Mouse Trap Game",
+        author: "Aaron",
+        url: "games/mouse.html",
+        email: "a@example.com",
+        tags: ["singleplayer","Aaron","mobile-friendly"],
+        popularity: 0
+    },
     // Add more games...
 ];

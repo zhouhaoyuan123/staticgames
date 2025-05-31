@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mouse Trap Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            display: block;
+            background-color: white;
+            cursor: crosshair;
+        }
+        #scoreDisplay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: #333;
+        }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: red;
+            display: none;
+        }
+        #restartCountdown {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+            background-color: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="scoreDisplay">Score: 0</div>
+    <div id="gameOver">GAME OVER</div>
+    <div id="restartCountdown">Restarting in 3...</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const gameOverDisplay = document.getElementById('gameOver');
+        const countdownDisplay = document.getElementById('restartCountdown');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gameActive = true;
+        const traps = [];
+        const mice = [];
+        const mouseSize = 20;
+        const trapSize = 30;
+        const maxMice = 5;
+        let mouseSpawnTimer = 0;
+        const mouseSpawnInterval = 2000;
+        let restartTimer = 0;
+        const restartDelay = 3000;
+		const trap_lim = 5;
+
+        class Mouse {
+            constructor() {
+                this.x = Math.random() * (canvas.width - mouseSize);
+                this.y = -mouseSize;
+                this.speedX = (Math.random() - 0.5) * 2;
+                this.speedY = Math.random() * 2 + 1;
+                this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                this.avoiding = false;
+                this.avoidDirection = 0;
+                this.avoidTimer = 0;
+            }
+
+            update() {
+                for (const trap of traps) {
+                    const dx = trap.x - this.x;
+                    const dy = trap.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < trapSize * 2) {
+                        this.avoiding = true;
+                        this.avoidDirection = Math.atan2(dy, dx) + Math.PI;
+                        this.avoidTimer = 30;
+                        break;
+                    }
+                }
+
+                if (this.avoiding && this.avoidTimer > 0) {
+                    this.speedX = Math.cos(this.avoidDirection) * 3;
+                    this.speedY = Math.sin(this.avoidDirection) * 3;
+                    this.avoidTimer--;
+                } else {
+                    this.speedX += (Math.random() - 0.5) * 0.2;
+                    this.speedY += (Math.random() - 0.1) * 0.2;
+
+                    const maxSpeed = 3;
+                    const speed = Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
+                    if (speed > maxSpeed) {
+                        this.speedX = (this.speedX / speed) * maxSpeed;
+                        this.speedY = (this.speedY / speed) * maxSpeed;
+                    }
+                }
+
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x < 0 || this.x > canvas.width - mouseSize) {
+                    this.speedX *= -1;
+                    this.x = Math.max(0, Math.min(canvas.width - mouseSize, this.x));
+                }
+
+                if (this.y > canvas.height) {
+                    gameActive = false;
+                    gameOverDisplay.style.display = 'block';
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x + mouseSize/2, this.y + mouseSize/2, mouseSize/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(this.x + mouseSize/3, this.y + mouseSize/3, mouseSize/6, 0, Math.PI * 2);
+                ctx.arc(this.x + mouseSize*2/3, this.y + mouseSize/3, mouseSize/6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Trap {
+            constructor(x, y) {
+                this.x = x - trapSize/2;
+                this.y = y - trapSize/2;
+                this.active = true;
+            }
+
+            draw() {
+                ctx.fillStyle = this.active ? '#8B4513' : '#555';
+                ctx.fillRect(this.x, this.y, trapSize, trapSize);
+                
+                if (this.active) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + trapSize/2, this.y + trapSize/4);
+                    ctx.lineTo(this.x + trapSize*3/4, this.y + trapSize/2);
+                    ctx.lineTo(this.x + trapSize/2, this.y + trapSize*3/4);
+                    ctx.lineTo(this.x + trapSize/4, this.y + trapSize/2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#8B4513';
+                    ctx.beginPath();
+                    ctx.arc(this.x + trapSize/3, this.y + trapSize/3, 2, 0, Math.PI * 2);
+                    ctx.arc(this.x + trapSize*2/3, this.y + trapSize/3, 3, 0, Math.PI * 2);
+                    ctx.arc(this.x + trapSize/2, this.y + trapSize/2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < mice.length; i++) {
+                for (let j = i + 1; j < mice.length; j++) {
+                    const mouse1 = mice[i];
+                    const mouse2 = mice[j];
+                    
+                    const dx = mouse2.x - mouse1.x;
+                    const dy = mouse2.y - mouse1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouseSize) {
+                        const angle = Math.atan2(dy, dx);
+                        const speed1 = Math.sqrt(mouse1.speedX * mouse1.speedX + mouse1.speedY * mouse1.speedY);
+                        const speed2 = Math.sqrt(mouse2.speedX * mouse2.speedX + mouse2.speedY * mouse2.speedY);
+                        
+                        mouse1.speedX = -Math.cos(angle) * speed1;
+                        mouse1.speedY = -Math.sin(angle) * speed1;
+                        mouse2.speedX = Math.cos(angle) * speed2;
+                        mouse2.speedY = Math.sin(angle) * speed2;
+                    }
+                }
+            }
+            
+            for (let i = mice.length - 1; i >= 0; i--) {
+                for (let j = traps.length - 1; j >= 0; j--) {
+                    if (!traps[j].active) continue;
+                    
+                    const mouse = mice[i];
+                    const trap = traps[j];
+                    
+                    const dx = (trap.x + trapSize/2) - (mouse.x + mouseSize/2);
+                    const dy = (trap.y + trapSize/2) - (mouse.y + mouseSize/2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < (mouseSize + trapSize)/2) {
+                        traps[j].active = false;
+                        mice.splice(i, 1);
+                        score += 10;
+                        scoreDisplay.textContent = `Score: ${score}`;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function spawnMouse() {
+            if (mice.length < maxMice && Math.random() < 0.3) {
+                mice.push(new Mouse());
+            }
+        }
+
+        function resetGame() {
+            traps.length = 0;
+            mice.length = 0;
+            score = 0;
+            gameActive = true;
+            scoreDisplay.textContent = `Score: ${score}`;
+            gameOverDisplay.style.display = 'none';
+            countdownDisplay.style.display = 'none';
+            
+            for (let i = 0; i < 2; i++) {
+                mice.push(new Mouse());
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (!gameActive) {
+                gameOverDisplay.style.display = 'block';
+                countdownDisplay.style.display = 'block';
+                
+                const secondsLeft = Math.ceil((restartDelay - restartTimer)/1000);
+                countdownDisplay.textContent = `Restarting in ${secondsLeft}...`;
+                
+                restartTimer += 16;
+                
+                if (restartTimer >= restartDelay) {
+                    resetGame();
+                    restartTimer = 0;
+                }
+                
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            mouseSpawnTimer += 16;
+            if (mouseSpawnTimer >= mouseSpawnInterval) {
+                spawnMouse();
+                mouseSpawnTimer = 0;
+            }
+            
+            for (const trap of traps) {
+                trap.draw();
+            }
+            
+            for (const mouse of mice) {
+                mouse.update();
+                mouse.draw();
+            }
+            
+            checkCollisions();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            traps.push(new Trap(e.clientX, e.clientY));
+            if (traps.length > trap_lim) traps.shift();
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (!gameActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            traps.push(new Trap(touch.clientX, touch.clientY));
+            if (traps.length > 20) traps.shift();
+        }, { passive: false });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        for (let i = 0; i < 2; i++) {
+            mice.push(new Mouse());
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
