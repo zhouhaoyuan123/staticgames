@@ -1,15 +1,21 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>App & Game Platform</title>
+    <meta charset="UTF-8">
+    <title id="title">App & Game Platform</title>
     <meta name="keywords" content="games, minigames, apps, static">
     <meta name="description" content="Discover and play a variety of static apps and games on our platform. Find your favorites and explore new experiences.">
     <script>
         // Theme loading functionality
         function getThemeFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('theme') || 'default';
+            let theme = urlParams.get('theme');
+            if (!theme) {
+                try {
+                    theme = localStorage.getItem('theme');
+                } catch (e) {}
+            }
+            return theme || 'default';
         }
         
         function loadTheme() {
@@ -45,17 +51,21 @@
             console.log("Game list loaded");
         });
     </script>
+    <script src="langs.js"></script>
+    <script src="themes/themes.js"></script>
     <script src="games.js"></script>
     <script src="app.js"></script>
 </head>
 <body>
     <div class="header">
-        <h1>App & Game Platform</h1>
+        <h1 id="title_banner">App & Game Platform</h1>
         <div class="controls">
             <input type="text" id="searchInput" placeholder="Search games...">
-            <button onclick="searchGames()">Search</button>
-            <button onclick="resetFilters()">Reset</button>
-            <div id="tagCloud"></div>            
+            <button id="searchBtn" onclick="searchGames()">Search</button>
+            <button id="resetBtn" onclick="resetFilters()">Reset</button>
+            <div id="tagCloud"></div>
+            <!-- Language selector will be injected by JS -->
+            <!-- Theme selector will be injected by JS -->
         </div>
     </div>
     <div id="gameList"></div>
