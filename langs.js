@@ -13,7 +13,18 @@ const translations = {
         of: "of",
         recommended: "Recommended Games",
         by: "By",
-        tags: "Tags"
+        tags: "Tags",
+        themeNames: {
+            default: "Default",
+            dark: "Dark",
+            light: "Light"
+        },
+        tagNames: {
+            singleplayer: "Singleplayer",
+            "mobile-friendly": "Mobile Friendly",
+            docs: "Documentation",
+            Aaron: "Aaron"
+        }
     },
     es: {
         title: "App & Game Platform",
@@ -27,7 +38,18 @@ const translations = {
         of: "de",
         recommended: "Juegos recomendados",
         by: "Por",
-        tags: "Etiquetas"
+        tags: "Etiquetas",
+        themeNames: {
+            default: "Predeterminado",
+            dark: "Oscuro",
+            light: "Claro"
+        },
+        tagNames: {
+            singleplayer: "Un jugador",
+            "mobile-friendly": "Compatible móvil",
+            docs: "Documentación",
+            Aaron: "Aaron"
+        }
     },
     fr: {
         title: "App & Game Platform",
@@ -41,7 +63,18 @@ const translations = {
         of: "sur",
         recommended: "Jeux recommandés",
         by: "Par",
-        tags: "Tags"
+        tags: "Tags",
+        themeNames: {
+            default: "Défaut",
+            dark: "Sombre",
+            light: "Clair"
+        },
+        tagNames: {
+            singleplayer: "Solo",
+            "mobile-friendly": "Mobile",
+            docs: "Documentation",
+            Aaron: "Aaron"
+        }
     },
     de: {
         title: "App & Game Platform",
@@ -55,7 +88,18 @@ const translations = {
         of: "von",
         recommended: "Empfohlene Spiele",
         by: "Von",
-        tags: "Stichworte"
+        tags: "Stichworte",
+        themeNames: {
+            default: "Standard",
+            dark: "Dunkel",
+            light: "Hell"
+        },
+        tagNames: {
+            singleplayer: "Einzelspieler",
+            "mobile-friendly": "Mobilfreundlich",
+            docs: "Dokumentation",
+            Aaron: "Aaron"
+        }
     },
     zh: {
         title: "应用和游戏集",
@@ -69,6 +113,17 @@ const translations = {
         of: "共",
         recommended: "推荐游戏",
         by: "作者",
-        tags: "标签"
+        tags: "标签",
+        themeNames: {
+            default: "默认",
+            dark: "深色",
+            light: "浅色"
+        },
+        tagNames: {
+            singleplayer: "单人",
+            "mobile-friendly": "移动端适配",
+            docs: "文档",
+            Aaron: "Aaron"
+        }
     }
 };

@@ -37,6 +37,9 @@ function setLanguage(lang) {
     renderTagCloud();
     applyFilters();
     renderPagination();
+
+    // Update theme selector to reflect new language
+    updateThemeSelector();
 }
 
 function updateUIText() {
@@ -46,7 +49,21 @@ function updateUIText() {
     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
     document.getElementById('searchBtn').textContent = t.search;
     document.getElementById('resetBtn').textContent = t.reset;
+    // Update theme selector to reflect new language
+    updateThemeSelector();
     // Update pagination and recommendations via rerender
+}
+
+function updateThemeSelector() {
+    const oldSel = document.getElementById('themeSelector');
+    if (oldSel) {
+        const controls = oldSel.parentNode;
+        const currentValue = oldSel.value;
+        controls.removeChild(oldSel);
+        const newSel = createThemeSelector();
+        newSel.value = currentValue;
+        controls.appendChild(newSel);
+    }
 }
 
 function createLanguageSelector() {
@@ -77,12 +94,14 @@ function createThemeSelector() {
     const themes = (window.themeConfig && window.themeConfig.availableThemes) || [
         { value: "default", label: "Default" }
     ];
+    const t = translations[currentLang];
     const currentTheme = getThemeFromURLorStorage();
-    themes.forEach(t => {
+    themes.forEach(themeObj => {
         const opt = document.createElement('option');
-        opt.value = t.value;
-        opt.textContent = t.label;
-        if (t.value === currentTheme) opt.selected = true;
+        opt.value = themeObj.value;
+        // Use translation if available, fallback to config label
+        opt.textContent = (t.themeNames && t.themeNames[themeObj.value]) || themeObj.label || themeObj.value;
+        if (themeObj.value === currentTheme) opt.selected = true;
         sel.appendChild(opt);
     });
     sel.onchange = () => {
@@ -151,11 +170,15 @@ function init() {
 }
 
 function renderTagCloud() {
+    const t = translations[currentLang];
     const allTags = [...new Set(gameDatabase.flatMap(g => g.tags))];
     const container = document.getElementById('tagCloud');
     container.innerHTML = allTags.map(tag => {
         const isActive = currentFilters.activeTags.includes(tag);
-        return `<span class="tag ${isActive ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tag}</span>`;
+        // Always use the tag key for filtering, but show translated label
+        const tagLabel = (t.tagNames && t.tagNames[tag]) || tag;
+        // Use data-tag for the original tag key
+        return `<span class="tag ${isActive ? 'active' : ''}" data-tag="${tag}" onclick="toggleTagFilter('${tag}')">${tagLabel}</span>`;
     }).join('');
 }
 
@@ -181,11 +204,17 @@ function searchGames() {
 }
 
 function applyFilters() {
+    const tLang = currentLang;
     const results = gameDatabase.filter(game => {
-        const matchesSearch = game.name.toLowerCase().includes(currentFilters.searchTerm) || 
-                            game.author.toLowerCase().includes(currentFilters.searchTerm);
-        const matchesTags = currentFilters.activeTags.length === 0 || 
-                          currentFilters.activeTags.every(tag => game.tags.includes(tag));
+        // Use translated name/author if available, fallback to default
+        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
+        const author = (game.author_i18n && game.author_i18n[tLang]) || game.author || "";
+        const matchesSearch =
+            name.toLowerCase().includes(currentFilters.searchTerm) ||
+            author.toLowerCase().includes(currentFilters.searchTerm);
+        const matchesTags =
+            currentFilters.activeTags.length === 0 ||
+            currentFilters.activeTags.every(tag => game.tags.includes(tag));
         return matchesSearch && matchesTags;
     });
     displayGames(results);
@@ -195,16 +224,24 @@ function applyFilters() {
 
 function displayGames(games) {
     const t = translations[currentLang];
+    const tLang = currentLang;
     const startIdx = (currentPage - 1) * gamesPerPage;
     const paginatedGames = games.slice(startIdx, startIdx + gamesPerPage);
-    
-    document.getElementById('gameList').innerHTML = paginatedGames.map(game => `
+
+    document.getElementById('gameList').innerHTML = paginatedGames.map(game => {
+        // Translate tags for display using tag key
+        const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
+        // Use translated name/author if available
+        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
+        const author = (game.author_i18n && game.author_i18n[tLang]) || game.author;
+        return `
         <div class="game-card" onclick="loadGame(${game.id})">
-            <h3>${game.name}</h3>
-            <p>${t.by} ${game.author} (${game.email})</p>
-            <p>${t.tags}: ${game.tags.join(', ')}</p>
+            <h3>${name}</h3>
+            <p>${t.by} ${author} (${game.email})</p>
+            <p>${t.tags}: ${tagLabels.join(', ')}</p>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderPagination(totalGames = gameDatabase.length) {
@@ -286,14 +323,21 @@ function loadGame(id) {
 
 function showRecommendations(gameId) {
     const t = translations[currentLang];
+    const tLang = currentLang;
     const recs = getRecommendedGames(gameId);
     document.getElementById('recommendations').innerHTML = `
         <h3>${t.recommended}</h3>
-        ${recs.map(game => `
+        ${recs.map(game => {
+            // Translate tags for recommendations using tag key
+            const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
+            // Use translated name if available
+            const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
+            return `
             <div class="rec-item" onclick="loadGame(${game.id})">
-                ${game.name} (${game.tags.join(', ')})
+                ${name} (${tagLabels.join(', ')})
             </div>
-        `).join('')}
+            `;
+        }).join('')}
     `;
 }
 
