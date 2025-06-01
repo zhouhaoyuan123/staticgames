@@ -1,4 +1,12 @@
-const gamesPerPage = 6;
+function getGamesPerPage() {
+    const width = window.innerWidth;
+    if (width <= 480) return 4;  // Small phones
+    if (width <= 768) return 6;  // Tablets/large phones
+    if (width <= 1024) return 8; // Small desktops
+    return 12; // Large screens
+}
+
+let gamesPerPage = getGamesPerPage();
 let currentPage = 1;
 let currentFilters = {
     searchTerm: '',
@@ -246,6 +254,7 @@ function displayGames(games) {
 
 function renderPagination(totalGames = gameDatabase.length) {
     const t = translations[currentLang];
+    gamesPerPage = getGamesPerPage(); // Update games per page based on current screen size
     const pageCount = Math.ceil(totalGames / gamesPerPage);
     let paginationHTML = '';
     
@@ -347,6 +356,17 @@ function closeFrame() {
 }
 
 window.onload = init;
+
+// Add resize listener to update games per page
+window.addEventListener('resize', function() {
+    const newGamesPerPage = getGamesPerPage();
+    if (newGamesPerPage !== gamesPerPage) {
+        gamesPerPage = newGamesPerPage;
+        // Reset to first page and reapply filters
+        currentPage = 1;
+        applyFilters();
+    }
+});
 
 // Expose setLanguage and setTheme for HTML
 window.setLanguage = setLanguage;
