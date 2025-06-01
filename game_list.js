@@ -21,7 +21,8 @@ const gameDatabase = [
         url: "games/rocket.html",
         email: "a@example.com",
         tags: ["singleplayer","Aaron"],
-        popularity: 0
+        popularity: 0,
+        passSettings: ["theme"],
     },
     {
         id: 2,
@@ -117,3 +118,5 @@ const gameDatabase = [
     },
     // Add more games...
 ];
+
+// If passSettings is not set, pass all (lang, theme) by default.

@@ -197,17 +197,20 @@ function toggleTagFilter(tag) {
     } else {
         currentFilters.activeTags.splice(index, 1);
     }
+    currentPage = 1; // Reset page on filter change
     applyFilters();
 }
 
 function resetFilters() {
     currentFilters = { searchTerm: '', activeTags: [] };
     document.getElementById('searchInput').value = '';
+    currentPage = 1; // Reset page on filter change
     applyFilters();
 }
 
 function searchGames() {
     currentFilters.searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    currentPage = 1; // Reset page on filter change
     applyFilters();
 }
 
@@ -325,7 +328,23 @@ function handlePageInputKeypress(event) {
 
 function loadGame(id) {
     const game = gameDatabase.find(g => g.id === id);
-    document.getElementById('gameFrame').src = game.url;
+    let url = game.url;
+    // Determine which settings to pass
+    const passSettings = Array.isArray(game.passSettings)
+        ? game.passSettings
+        : ["lang", "theme"];
+    const params = [];
+    if (passSettings.includes("lang")) {
+        params.push("lang=" + encodeURIComponent(currentLang));
+    }
+    if (passSettings.includes("theme")) {
+        const theme = getThemeFromURLorStorage();
+        params.push("theme=" + encodeURIComponent(theme));
+    }
+    if (params.length > 0) {
+        url += (url.includes("?") ? "&" : "?") + params.join("&");
+    }
+    document.getElementById('gameFrame').src = url;
     document.getElementById('fullscreenOverlay').style.display = 'flex';
     showRecommendations(id);
 }
