@@ -119,44 +119,44 @@ body, html {
     body, html {
         font-size: 18px;
     }
-    
+
     .header {
         padding: 15px;
     }
-    
+
     .header h1 {
         font-size: 1.6rem;
     }
-    
+
     .controls {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .controls input, .controls button, .controls select {
         font-size: 18px;
         padding: 12px 16px;
         min-height: 48px;
     }
-    
+
     #gameList {
         grid-template-columns: 1fr;
         padding: 15px;
         gap: 15px;
     }
-    
+
     .game-card {
         padding: 18px;
     }
-    
+
     .game-card h3 {
         font-size: 1.3rem;
     }
-    
+
     .game-card p {
         font-size: 1.1rem;
     }
-    
+
     .tag {
         font-size: 16px;
         padding: 10px 14px;
@@ -168,29 +168,56 @@ body, html {
     body, html {
         font-size: 20px;
     }
-    
+
+    .header {
+        padding: 10px;
+    }
+
     .header h1 {
         font-size: 1.5rem;
     }
-    
+
+    .controls {
+        gap: 8px;
+    }
+
     .controls input, .controls button, .controls select {
-        font-size: 20px;
-        padding: 14px 18px;
-        min-height: 52px;
-    }
-    
-    .game-card h3 {
-        font-size: 1.4rem;
-    }
-    
-    .game-card p {
-        font-size: 1.2rem;
-    }
-    
-    .tag {
         font-size: 18px;
-        padding: 12px 16px;
-        min-height: 44px;
+        padding: 12px 14px;
+        min-height: 48px;
+        min-width: auto;
+    }
+
+    #searchInput {
+        min-width: 120px;
+    }
+
+    #gameList {
+        padding: 10px;
+        gap: 10px;
+        grid-template-columns: 1fr;
+    }
+
+    .game-card {
+        padding: 15px;
+    }
+
+    .game-card h3 {
+        font-size: 1.3rem;
+    }
+
+    .game-card p {
+        font-size: 1.1rem;
+    }
+
+    .tag {
+        font-size: 16px;
+        padding: 10px 12px;
+        min-height: 40px;
+    }
+
+    #tagCloud {
+        gap: 6px;
     }
 }
 
@@ -251,18 +278,18 @@ body, html {
         padding: 15px;
         gap: 12px;
     }
-    
+
     .page-btn {
         padding: 14px 18px;
         font-size: 18px;
         min-height: 48px;
         min-width: 90px;
     }
-    
+
     .page-info {
         font-size: 18px;
     }
-    
+
     #pageInput {
         width: 80px;
         padding: 10px 14px;
@@ -272,22 +299,59 @@ body, html {
 }
 
 @media (max-width: 480px) {
-    .page-btn {
-        padding: 16px 20px;
-        font-size: 20px;
-        min-height: 52px;
-        min-width: 100px;
-    }
-    
-    .page-info {
+    body, html {
         font-size: 20px;
     }
-    
-    #pageInput {
-        width: 90px;
-        padding: 12px 16px;
-        font-size: 20px;
-        min-height: 52px;
+
+    .header {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .controls {
+        gap: 8px;
+    }
+
+    .controls input, .controls button, .controls select {
+        font-size: 18px;
+        padding: 12px 14px;
+        min-height: 48px;
+        min-width: auto;
+    }
+
+    #searchInput {
+        min-width: 120px;
+    }
+
+    #gameList {
+        padding: 10px;
+        gap: 10px;
+        grid-template-columns: 1fr;
+    }
+
+    .game-card {
+        padding: 15px;
+    }
+
+    .game-card h3 {
+        font-size: 1.3rem;
+    }
+
+    .game-card p {
+        font-size: 1.1rem;
+    }
+
+    .tag {
+        font-size: 16px;
+        padding: 10px 12px;
+        min-height: 40px;
+    }
+
+    #tagCloud {
+        gap: 6px;
     }
 }
 
