@@ -1,5 +1,4 @@
 // --- Multilanguage Support ---
-//note : parameters passed by url will not be saved to localstorage !
 const supportedLanguages = ['en', 'es', 'fr', 'de', 'zh'];
 const translations = {
     en: {

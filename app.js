@@ -179,6 +179,7 @@ function init() {
     renderPagination();
     updateUIText();
     renderNotices();
+    setLanguage(currentLang); // Ensure language is set after UI is ready
 }
 
 function renderTagCloud() {

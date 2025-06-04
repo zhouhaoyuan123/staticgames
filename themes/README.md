@@ -27,4 +27,3 @@ Add the `theme` parameter to the URL to load a specific theme:
 ## Fallback Behavior
 
 If a theme file doesn't exist, the system will automatically fall back to the default theme and display a warning in the console.
-> Note : parameters passed by url will not be saved to localstorage !
