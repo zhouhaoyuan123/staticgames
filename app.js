@@ -48,6 +48,9 @@ function setLanguage(lang) {
 
     // Update theme selector to reflect new language
     updateThemeSelector();
+
+    // Render notices in new language
+    renderNotices();
 }
 
 function updateUIText() {
@@ -175,6 +178,7 @@ function init() {
     displayGames(gameDatabase);
     renderPagination();
     updateUIText();
+    renderNotices();
 }
 
 function renderTagCloud() {
@@ -390,3 +394,20 @@ window.addEventListener('resize', function() {
 // Expose setLanguage and setTheme for HTML
 window.setLanguage = setLanguage;
 window.setTheme = setTheme;
+
+function renderNotices() {
+    const lang = currentLang;
+    const config = window.noticesConfig;
+    if (!config || !config.notices || !config.header) return;
+    const header = config.header[lang] || config.header.en || "Notice";
+    const notices = config.notices
+        .map(n => {
+            const type = n.type || "default";
+            return `<div class="notice-box ${type}">
+                <div class="notice-header">${header}</div>
+                <div class="notice-content">${n.content[lang] || n.content.en || ""}</div>
+            </div>`;
+        })
+        .join('');
+    document.getElementById('noticePane').innerHTML = notices;
+}

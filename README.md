@@ -8,6 +8,7 @@ This project is a collection of games and resources, all accessible through a se
 - 100% static webpages—no server required
 - Easy to deploy and host anywhere (GitHub Pages, Netlify, etc.)
 - Lightweight and fast loading
+- Custom themes & multi-language support see [themes](themes/README.md) and <code>langs.js</code>for details
 
 ## Getting Started
 
