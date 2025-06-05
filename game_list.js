@@ -23,6 +23,20 @@ const gameDatabase = [
         tags: ["singleplayer","Aaron"],
         popularity: 0,
         passSettings: ["theme"],
+        images: {
+            en: "images/rocket_en.png",
+            es: "images/rocket_es.png",
+            fr: "images/rocket_fr.png",
+            de: "images/rocket_de.png",
+            zh: "images/rocket_zh.png"
+        },
+        gifs: {
+            en: "images/rocket_en.gif",
+            es: "images/rocket_es.gif",
+            fr: "images/rocket_fr.gif",
+            de: "images/rocket_de.gif",
+            zh: "images/rocket_zh.gif"
+        }
     },
     {
         id: 2,

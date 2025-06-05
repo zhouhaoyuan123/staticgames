@@ -96,6 +96,9 @@ body, html {
     cursor: pointer;
     border-radius: 8px;
     transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .game-card h3 {
@@ -112,6 +115,49 @@ body, html {
 .game-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.game-thumb-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 220px;
+    height: 140px;
+    display: block;
+    margin: 0 auto 12px auto;
+}
+
+.game-thumb {
+    width: 100%;
+    height: 100%;
+    max-width: 220px;
+    max-height: 140px;
+    display: block;
+    position: absolute;
+    left: 0; top: 0;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f5f5f5;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.game-thumb-static {
+    z-index: 1;
+    opacity: 1;
+}
+
+.game-thumb-gif {
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.game-thumb-wrapper:hover .game-thumb-static {
+    opacity: 0;
+}
+
+.game-thumb-wrapper:hover .game-thumb-gif {
+    opacity: 1;
 }
 
 /* Responsive breakpoints */

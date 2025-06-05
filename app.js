@@ -238,6 +238,27 @@ function applyFilters() {
     renderTagCloud(); // Re-render tag cloud to update active states
 }
 
+function getGameImage(game, lang) {
+    // Try current lang, then en, then first available
+    if (game.images && game.images[lang]) return game.images[lang];
+    if (game.images && game.images.en) return game.images.en;
+    if (game.images) {
+        const keys = Object.keys(game.images);
+        if (keys.length) return game.images[keys[0]];
+    }
+    return null;
+}
+
+function getGameGif(game, lang) {
+    if (game.gifs && game.gifs[lang]) return game.gifs[lang];
+    if (game.gifs && game.gifs.en) return game.gifs.en;
+    if (game.gifs) {
+        const keys = Object.keys(game.gifs);
+        if (keys.length) return game.gifs[keys[0]];
+    }
+    return null;
+}
+
 function displayGames(games) {
     const t = translations[currentLang];
     const tLang = currentLang;
@@ -250,8 +271,21 @@ function displayGames(games) {
         // Use translated name/author if available
         const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
         const author = (game.author_i18n && game.author_i18n[tLang]) || game.author;
+        // Image/gif logic
+        const imgSrc = getGameImage(game, tLang);
+        const gifSrc = getGameGif(game, tLang);
+        let imgHtml = '';
+        if (imgSrc || gifSrc) {
+            imgHtml = `
+                <span class="game-thumb-wrapper">
+                    ${imgSrc ? `<img class="game-thumb game-thumb-static" src="${imgSrc}" loading="lazy" alt="${name}">` : ''}
+                    ${gifSrc ? `<img class="game-thumb game-thumb-gif" src="${gifSrc}" loading="lazy" alt="${name}">` : ''}
+                </span>
+            `;
+        }
         return `
         <div class="game-card" onclick="loadGame(${game.id})">
+            ${imgHtml}
             <h3>${name}</h3>
             <p>${t.by} ${author} (${game.email})</p>
             <p>${t.tags}: ${tagLabels.join(', ')}</p>
