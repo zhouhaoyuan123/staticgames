@@ -36,7 +36,8 @@ const gameDatabase = [
             fr: "images/rocket_fr.gif",
             de: "images/rocket_de.gif",
             zh: "images/rocket_zh.gif"
-        }
+        },
+        playGifOnMobile: true
     },
     {
         id: 2,
@@ -60,6 +61,7 @@ const gameDatabase = [
         email: "a@example.com",
         tags: ["singleplayer","Aaron"],
         popularity: 0
+        // playGifOnMobile not set, will use default (true)
     },
     {
         id: 3,
@@ -82,7 +84,8 @@ const gameDatabase = [
         url: "games/maze.html",
         email: "a@example.com",
         tags: ["singleplayer","Aaron"],
-        popularity: 0
+        popularity: 0,
+        playGifOnMobile: false
     },
     {
         id: 4,
@@ -133,4 +136,4 @@ const gameDatabase = [
     // Add more games...
 ];
 
-// If passSettings is not set, pass all (lang, theme) by default.
+// If playGifOnMobile is not set, default is true

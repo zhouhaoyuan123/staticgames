@@ -1,3 +1,8 @@
+function isTouchDevice() {
+    return (('ontouchstart' in window) ||
+    (navigator.maxTouchPoints > 0) ||
+    (navigator.msMaxTouchPoints > 0));
+}
 function getGamesPerPage() {
     const width = window.innerWidth;
     if (width <= 480) return 4;  // Small phones
@@ -265,7 +270,8 @@ function displayGames(games) {
     const startIdx = (currentPage - 1) * gamesPerPage;
     const paginatedGames = games.slice(startIdx, startIdx + gamesPerPage);
 
-    document.getElementById('gameList').innerHTML = paginatedGames.map(game => {
+    const isMobile = isTouchDevice();
+    document.getElementById('gameList').innerHTML = paginatedGames.map((game, idx) => {
         // Translate tags for display using tag key
         const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
         // Use translated name/author if available
@@ -274,12 +280,15 @@ function displayGames(games) {
         // Image/gif logic
         const imgSrc = getGameImage(game, tLang);
         const gifSrc = getGameGif(game, tLang);
+        // Determine if gif should be shown by default on mobile for this game
+        const playGifOnMobile = (typeof game.playGifOnMobile === "boolean") ? game.playGifOnMobile : true;
+        const showGif = isMobile && gifSrc && playGifOnMobile;
         let imgHtml = '';
         if (imgSrc || gifSrc) {
             imgHtml = `
                 <span class="game-thumb-wrapper">
-                    ${imgSrc ? `<img class="game-thumb game-thumb-static" src="${imgSrc}" loading="lazy" alt="${name}">` : ''}
-                    ${gifSrc ? `<img class="game-thumb game-thumb-gif" src="${gifSrc}" loading="lazy" alt="${name}">` : ''}
+                    ${imgSrc ? `<img class="game-thumb game-thumb-static" src="${imgSrc}" loading="lazy" alt="${name}" style="${showGif ? 'opacity:0;' : ''}">` : ''}
+                    ${gifSrc ? `<img class="game-thumb game-thumb-gif" src="${gifSrc}" loading="lazy" alt="${name}" style="${showGif ? 'opacity:1;z-index:2;' : ''}">` : ''}
                 </span>
             `;
         }
