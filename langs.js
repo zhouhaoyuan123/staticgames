@@ -24,7 +24,12 @@ const translations = {
             "mobile-friendly": "Mobile Friendly",
             docs: "Documentation",
             Aaron: "Aaron"
-        }
+        },
+        favourites: "Favourites",
+        recentlyPlayed: "Recently Played",
+        addFavourite: "Add to favourites",
+        removeFavourite: "Remove from favourites",
+        clear: "Clear",
     },
     es: {
         title: "App & Game Platform",
@@ -49,7 +54,12 @@ const translations = {
             "mobile-friendly": "Compatible móvil",
             docs: "Documentación",
             Aaron: "Aaron"
-        }
+        },
+        favourites: "Favoritos",
+        recentlyPlayed: "Jugados recientemente",
+        addFavourite: "Agregar a favoritos",
+        removeFavourite: "Quitar de favoritos",
+        clear: "Limpiar",
     },
     fr: {
         title: "App & Game Platform",
@@ -74,7 +84,12 @@ const translations = {
             "mobile-friendly": "Mobile",
             docs: "Documentation",
             Aaron: "Aaron"
-        }
+        },
+        favourites: "Favoris",
+        recentlyPlayed: "Récemment joués",
+        addFavourite: "Ajouter aux favoris",
+        removeFavourite: "Retirer des favoris",
+        clear: "Effacer",
     },
     de: {
         title: "App & Game Platform",
@@ -99,7 +114,12 @@ const translations = {
             "mobile-friendly": "Mobilfreundlich",
             docs: "Dokumentation",
             Aaron: "Aaron"
-        }
+        },
+        favourites: "Favoriten",
+        recentlyPlayed: "Kürzlich gespielt",
+        addFavourite: "Zu Favoriten hinzufügen",
+        removeFavourite: "Aus Favoriten entfernen",
+        clear: "Löschen",
     },
     zh: {
         title: "应用和游戏集",
@@ -124,6 +144,11 @@ const translations = {
             "mobile-friendly": "移动端适配",
             docs: "文档",
             Aaron: "Aaron"
-        }
+        },
+        favourites: "收藏夹",
+        recentlyPlayed: "最近玩过",
+        addFavourite: "添加到收藏夹",
+        removeFavourite: "从收藏夹移除",
+        clear: "清除",
     }
 };

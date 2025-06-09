@@ -184,6 +184,8 @@ function init() {
     renderPagination();
     updateUIText();
     renderNotices();
+    renderFavouritesSection();
+    renderRecentlyPlayedSection();
     setLanguage(currentLang); // Ensure language is set after UI is ready
 }
 
@@ -267,8 +269,14 @@ function getGameGif(game, lang) {
 function displayGames(games) {
     const t = translations[currentLang];
     const tLang = currentLang;
+    const favIds = getFavourites();
+    // Move favourites to the front, preserving order and avoiding duplicates
+    const favGames = favIds.map(id => games.find(g => g.id === id)).filter(Boolean);
+    const nonFavGames = games.filter(g => !favIds.includes(g.id));
+    const orderedGames = [...favGames, ...nonFavGames];
+
     const startIdx = (currentPage - 1) * gamesPerPage;
-    const paginatedGames = games.slice(startIdx, startIdx + gamesPerPage);
+    const paginatedGames = orderedGames.slice(startIdx, startIdx + gamesPerPage);
 
     const isMobile = isTouchDevice();
     document.getElementById('gameList').innerHTML = paginatedGames.map((game, idx) => {
@@ -292,8 +300,11 @@ function displayGames(games) {
                 </span>
             `;
         }
+        // Add favourite icon
+        const favIcon = `<span class="fav-icon" title="${isFavourite(game.id) ? (t.removeFavourite || "Remove from favourites") : (t.addFavourite || "Add to favourites")}" onclick="event.stopPropagation();toggleFavourite(${game.id});return false;">${isFavourite(game.id) ? "★" : "☆"}</span>`;
         return `
         <div class="game-card" onclick="loadGame(${game.id})">
+            ${favIcon}
             ${imgHtml}
             <h3>${name}</h3>
             <p>${t.by} ${author} (${game.email})</p>
@@ -395,6 +406,7 @@ function loadGame(id) {
     document.getElementById('gameFrame').src = url;
     document.getElementById('fullscreenOverlay').style.display = 'flex';
     showRecommendations(id);
+    addRecentlyPlayed(id);
 }
 
 function showRecommendations(gameId) {
@@ -421,6 +433,173 @@ function closeFrame() {
     document.getElementById('fullscreenOverlay').style.display = 'none';
     document.getElementById('gameFrame').src = '';
 }
+
+// --- Favourites and Recently Played Management ---
+const FAV_KEY = "favouriteGames";
+const RECENT_KEY = "recentlyPlayedGames";
+const MAX_RECENT = 10;
+
+function getFavourites() {
+    try {
+        return JSON.parse(localStorage.getItem(FAV_KEY)) || [];
+    } catch { return []; }
+}
+function setFavourites(favs) {
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+}
+function toggleFavourite(gameId) {
+    let favs = getFavourites();
+    if (favs.includes(gameId)) {
+        favs = favs.filter(id => id !== gameId);
+    } else {
+        favs.push(gameId);
+    }
+    setFavourites(favs);
+    renderFavouritesSection();
+    applyFilters(); // To update favourite icons
+}
+function isFavourite(gameId) {
+    return getFavourites().includes(gameId);
+}
+
+function getRecentlyPlayed() {
+    try {
+        return JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+    } catch { return []; }
+}
+function addRecentlyPlayed(gameId) {
+    let recent = getRecentlyPlayed();
+    recent = recent.filter(id => id !== gameId);
+    recent.unshift(gameId);
+    if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+    renderRecentlyPlayedSection();
+}
+function clearRecentlyPlayed() {
+    localStorage.removeItem(RECENT_KEY);
+    renderRecentlyPlayedSection();
+}
+
+function renderFavouritesSection() {
+    const t = translations[currentLang];
+    const favIds = getFavourites();
+    if (!favIds.length) {
+        document.getElementById('favouritesSection').innerHTML = '';
+        return;
+    }
+    const favGames = favIds.map(id => gameDatabase.find(g => g.id === id)).filter(Boolean);
+    document.getElementById('favouritesSection').innerHTML = `
+        <div class="favourites-header">
+            <h3>${t.favourites || "Favourites"}</h3>
+            <button onclick="clearFavourites()">${t.clear || "Clear"}</button>
+        </div>
+        <div class="favourites-list">
+            ${favGames.map(game => {
+                const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
+                return `<span class="favourite-game" onclick="loadGame(${game.id})">
+                    ${name}
+                    <button class="fav-remove-btn" title="${t.removeFavourite || "Remove from favourites"}" onclick="event.stopPropagation();removeFavourite(${game.id});return false;">✕</button>
+                </span>`;
+            }).join('')}
+        </div>
+    `;
+}
+
+function clearFavourites() {
+    localStorage.removeItem(FAV_KEY);
+    renderFavouritesSection();
+    applyFilters();
+}
+function removeFavourite(gameId) {
+    let favs = getFavourites();
+    favs = favs.filter(id => id !== gameId);
+    setFavourites(favs);
+    renderFavouritesSection();
+    applyFilters();
+}
+
+function renderRecentlyPlayedSection() {
+    const t = translations[currentLang];
+    const recentIds = getRecentlyPlayed();
+    if (!recentIds.length) {
+        document.getElementById('recentlyPlayedSection').innerHTML = '';
+        return;
+    }
+    const recentGames = recentIds.map(id => gameDatabase.find(g => g.id === id)).filter(Boolean);
+    document.getElementById('recentlyPlayedSection').innerHTML = `
+        <div class="recent-header">
+            <h3>${t.recentlyPlayed || "Recently Played"}</h3>
+            <button onclick="clearRecentlyPlayed()">${t.clear || "Clear"}</button>
+        </div>
+        <div class="recent-list">
+            ${recentGames.map(game => {
+                const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
+                return `<span class="recent-game" onclick="loadGame(${game.id})">
+                    ${name}
+                    <button class="recent-remove-btn" title="${t.clear || "Remove"}" onclick="event.stopPropagation();removeRecentlyPlayed(${game.id});return false;">✕</button>
+                </span>`;
+            }).join('')}
+        </div>
+    `;
+}
+
+function removeRecentlyPlayed(gameId) {
+    let recent = getRecentlyPlayed();
+    recent = recent.filter(id => id !== gameId);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+    renderRecentlyPlayedSection();
+}
+
+// --- Export/Import User Data ---
+function exportUserData() {
+    const data = {
+        favourites: getFavourites(),
+        recentlyPlayed: getRecentlyPlayed()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "game_platform_userdata.json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+function importUserData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (Array.isArray(data.favourites)) setFavourites(data.favourites);
+            if (Array.isArray(data.recentlyPlayed)) localStorage.setItem(RECENT_KEY, JSON.stringify(data.recentlyPlayed));
+            renderFavouritesSection();
+            renderRecentlyPlayedSection();
+            applyFilters();
+            alert("Data imported successfully.");
+        } catch {
+            alert("Invalid data file.");
+        }
+    };
+    reader.readAsText(file);
+    // Reset input so user can import again if needed
+    event.target.value = "";
+}
+
+// Expose for HTML
+window.setLanguage = setLanguage;
+window.setTheme = setTheme;
+window.toggleFavourite = toggleFavourite;
+window.clearFavourites = clearFavourites;
+window.clearRecentlyPlayed = clearRecentlyPlayed;
+window.exportUserData = exportUserData;
+window.importUserData = importUserData;
+window.removeFavourite = removeFavourite;
+window.removeRecentlyPlayed = removeRecentlyPlayed;
 
 window.onload = init;
 

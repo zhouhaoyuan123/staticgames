@@ -71,9 +71,14 @@
             <div id="tagCloud"></div>
             <!-- Language selector will be injected by JS -->
             <!-- Theme selector will be injected by JS -->
+            <button id="exportBtn" onclick="exportUserData()">Export Data</button>
+            <input type="file" id="importInput" style="display:none" accept=".json" onchange="importUserData(event)">
+            <button id="importBtn" onclick="document.getElementById('importInput').click()">Import Data</button>
         </div>
     </div>
     <div id="noticePane"></div>
+    <div id="recentlyPlayedSection"></div>
+    <div id="favouritesSection"></div>
     <div id="gameList"></div>
     <div id="pagination"></div>
     <div id="fullscreenOverlay" class="hidden">
