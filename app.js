@@ -232,23 +232,104 @@ function searchGames() {
     applyFilters();
 }
 
+// --- Parallelize heavy operations using Web Workers if available ---
+
+// Helper to run a function in a worker and get the result as a Promise
+function runInWorker(fn, data) {
+    return new Promise((resolve, reject) => {
+        if (!window.Worker) {
+            // Fallback: run in main thread
+            try {
+                resolve(fn(data));
+            } catch (e) {
+                reject(e);
+            }
+            return;
+        }
+        const blob = new Blob([
+            `
+            onmessage = function(e) {
+                const fn = ${fn.toString()};
+                try {
+                    postMessage({result: fn(e.data)});
+                } catch (err) {
+                    postMessage({error: err && err.message});
+                }
+            }
+            `
+        ], { type: "application/javascript" });
+        const worker = new Worker(URL.createObjectURL(blob));
+        worker.onmessage = function(e) {
+            if (e.data && e.data.error) reject(e.data.error);
+            else resolve(e.data.result);
+            worker.terminate();
+        };
+        worker.onerror = function(e) {
+            reject(e.message);
+            worker.terminate();
+        };
+        worker.postMessage(data);
+    });
+}
+
+// Example: parallelize filtering and sorting of games
 function applyFilters() {
     const tLang = currentLang;
-    const results = gameDatabase.filter(game => {
-        // Use translated name/author if available, fallback to default
-        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
-        const author = (game.author_i18n && game.author_i18n[tLang]) || game.author || "";
-        const matchesSearch =
-            name.toLowerCase().includes(currentFilters.searchTerm) ||
-            author.toLowerCase().includes(currentFilters.searchTerm);
-        const matchesTags =
-            currentFilters.activeTags.length === 0 ||
-            currentFilters.activeTags.every(tag => game.tags.includes(tag));
-        return matchesSearch && matchesTags;
+    // Move filtering to a worker if possible
+    runInWorker(function({gameDatabase, currentFilters, tLang, favIds}) {
+        // Filtering logic (copied from previous applyFilters)
+        function getName(game) {
+            return (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
+        }
+        function getAuthor(game) {
+            return (game.author_i18n && game.author_i18n[tLang]) || game.author || "";
+        }
+        const filtered = gameDatabase.filter(game => {
+            const name = getName(game);
+            const author = getAuthor(game);
+            const matchesSearch =
+                name.toLowerCase().includes(currentFilters.searchTerm) ||
+                author.toLowerCase().includes(currentFilters.searchTerm);
+            const matchesTags =
+                currentFilters.activeTags.length === 0 ||
+                currentFilters.activeTags.every(tag => game.tags.includes(tag));
+            return matchesSearch && matchesTags;
+        });
+        // Move favourites to the front, preserving order and avoiding duplicates
+        const favGames = favIds.map(id => filtered.find(g => g.id === id)).filter(Boolean);
+        const nonFavGames = filtered.filter(g => !favIds.includes(g.id));
+        return [...favGames, ...nonFavGames];
+    }, {
+        gameDatabase,
+        currentFilters,
+        tLang,
+        favIds: getFavourites()
+    }).then(results => {
+        displayGames(results);
+        renderPagination(results.length);
+        renderTagCloud(); // Re-render tag cloud to update active states
+    }).catch(() => {
+        // fallback to main thread if worker fails
+        const results = gameDatabase.filter(game => {
+            const name = (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
+            const author = (game.author_i18n && game.author_i18n[tLang]) || game.author || "";
+            const matchesSearch =
+                name.toLowerCase().includes(currentFilters.searchTerm) ||
+                author.toLowerCase().includes(currentFilters.searchTerm);
+            const matchesTags =
+                currentFilters.activeTags.length === 0 ||
+                currentFilters.activeTags.every(tag => game.tags.includes(tag));
+            return matchesSearch && matchesTags;
+        });
+        // Move favourites to the front, preserving order and avoiding duplicates
+        const favIds = getFavourites();
+        const favGames = favIds.map(id => results.find(g => g.id === id)).filter(Boolean);
+        const nonFavGames = results.filter(g => !favIds.includes(g.id));
+        const orderedGames = [...favGames, ...nonFavGames];
+        displayGames(orderedGames);
+        renderPagination(orderedGames.length);
+        renderTagCloud();
     });
-    displayGames(results);
-    renderPagination(results.length);
-    renderTagCloud(); // Re-render tag cloud to update active states
 }
 
 function getGameImage(game, lang) {
