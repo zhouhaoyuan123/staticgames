@@ -30,6 +30,8 @@ const translations = {
         addFavourite: "Add to favourites",
         removeFavourite: "Remove from favourites",
         clear: "Clear",
+        exportData: "Export Data",
+        importData: "Import Data",
     },
     es: {
         title: "App & Game Platform",
@@ -60,6 +62,8 @@ const translations = {
         addFavourite: "Agregar a favoritos",
         removeFavourite: "Quitar de favoritos",
         clear: "Limpiar",
+        exportData: "Exportar datos",
+        importData: "Importar datos",
     },
     fr: {
         title: "App & Game Platform",
@@ -90,6 +94,8 @@ const translations = {
         addFavourite: "Ajouter aux favoris",
         removeFavourite: "Retirer des favoris",
         clear: "Effacer",
+        exportData: "Exporter les données",
+        importData: "Importer des données",
     },
     de: {
         title: "App & Game Platform",
@@ -120,6 +126,8 @@ const translations = {
         addFavourite: "Zu Favoriten hinzufügen",
         removeFavourite: "Aus Favoriten entfernen",
         clear: "Löschen",
+        exportData: "Daten exportieren",
+        importData: "Daten importieren",
     },
     zh: {
         title: "应用和游戏集",
@@ -150,5 +158,7 @@ const translations = {
         addFavourite: "添加到收藏夹",
         removeFavourite: "从收藏夹移除",
         clear: "清除",
+        exportData: "导出数据",
+        importData: "导入数据",
     }
 };

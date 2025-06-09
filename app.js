@@ -69,6 +69,8 @@ function updateUIText() {
     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
     document.getElementById('searchBtn').textContent = t.search;
     document.getElementById('resetBtn').textContent = t.reset;
+    document.getElementById('importBtn').textContent = t.importData;
+    document.getElementById('exportBtn').textContent = t.exportData;
     // Update theme selector to reflect new language
     updateThemeSelector();
     // Update pagination and recommendations via rerender
