@@ -56,6 +56,10 @@ function setLanguage(lang) {
 
     // Render notices in new language
     renderNotices();
+
+    // Ensure recently played and favourites sections update language immediately
+    renderFavouritesSection();
+    renderRecentlyPlayedSection();
 }
 
 function updateUIText() {
