@@ -153,7 +153,39 @@ function setTheme(theme) {
         document.head.appendChild(fallbackLink);
     };
     document.head.appendChild(link);
-    // Optionally, trigger a UI refresh if needed
+
+    // --- Theme JS support ---
+    // Find theme config
+    let themeObj = null;
+    if (window.themeConfig && Array.isArray(window.themeConfig.availableThemes)) {
+        themeObj = window.themeConfig.availableThemes.find(t => t.value === theme);
+    }
+    // Remove any previous theme worker
+    if (window._themeWorker) {
+        window._themeWorker.terminate();
+        window._themeWorker = null;
+    }
+    if (themeObj && themeObj.js) {
+        // Load JS file and run in a worker
+        fetch(themeObj.js)
+            .then(resp => resp.text())
+            .then(jsCode => {
+                const worker = new Worker(URL.createObjectURL(new Blob([jsCode], {type: "application/javascript"})));
+                window._themeWorker = worker;
+                // Optionally, send initial data to the worker
+                worker.postMessage({type: "init", theme});
+                // Optionally, listen for messages from the worker
+                worker.onmessage = function(e) {
+                    // You can handle theme-specific messages here
+                    // Example: apply CSS variables, etc.
+                    if (e.data && e.data.cssVars) {
+                        for (const [k, v] of Object.entries(e.data.cssVars)) {
+                            document.documentElement.style.setProperty(k, v);
+                        }
+                    }
+                };
+            });
+    }
     // Remove theme param from URL so it doesn't override user choice on reload
     const url = new URL(window.location.href);
     if (url.searchParams.has('theme')) {
@@ -472,9 +504,20 @@ function handlePageInputKeypress(event) {
     }
 }
 
+// --- Multiple Game Windows Management ---
+let gameWindowZ = 3000;
+let openGameWindows = {};
+
 function loadGame(id) {
     const game = gameDatabase.find(g => g.id === id);
-    let url = game.url;
+    if (!game) return;
+    // If already open, bring to front
+    if (openGameWindows[id]) {
+        focusGameWindow(id);
+        return;
+    }
+    const tLang = currentLang;
+    const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
     // Determine which settings to pass
     const passSettings = Array.isArray(game.passSettings)
         ? game.passSettings
@@ -487,25 +530,167 @@ function loadGame(id) {
         const theme = getThemeFromURLorStorage();
         params.push("theme=" + encodeURIComponent(theme));
     }
+    let url = game.url;
     if (params.length > 0) {
         url += (url.includes("?") ? "&" : "?") + params.join("&");
     }
-    document.getElementById('gameFrame').src = url;
-    document.getElementById('fullscreenOverlay').style.display = 'flex';
-    showRecommendations(id);
+    createGameWindow({
+        id,
+        title: name,
+        url,
+        game
+    });
     addRecentlyPlayed(id);
 }
 
-function showRecommendations(gameId) {
+function createGameWindow({id, title, url, game}) {
+    const container = document.getElementById('gameWindowsContainer');
+    if (!container) return;
+    // Initial size/position
+    const width = Math.min(600, window.innerWidth * 0.7);
+    const height = Math.min(420, window.innerHeight * 0.7);
+    const left = 40 + Object.keys(openGameWindows).length * 30;
+    const top = 40 + Object.keys(openGameWindows).length * 30;
+
+    // Window element
+    const win = document.createElement('div');
+    win.className = 'game-window';
+    win.style.width = width + 'px';
+    win.style.height = height + 'px';
+    win.style.left = left + 'px';
+    win.style.top = top + 'px';
+    win.style.zIndex = ++gameWindowZ;
+    win.dataset.gameId = id;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'game-window-header';
+    header.onmousedown = e => dragGameWindow(e, win);
+
+    // Title
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'game-window-title';
+    titleSpan.textContent = title;
+
+    // Controls
+    const controls = document.createElement('div');
+    controls.className = 'game-window-controls';
+
+    // Maximize/restore button
+    const maxBtn = document.createElement('button');
+    maxBtn.className = 'game-window-btn';
+    maxBtn.title = 'Maximize';
+    maxBtn.innerHTML = '⬜';
+    maxBtn.onclick = e => {
+        e.stopPropagation();
+        toggleMaximizeGameWindow(win, id);
+    };
+
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'game-window-btn';
+    closeBtn.title = 'Close';
+    closeBtn.innerHTML = '✕';
+    closeBtn.onclick = e => {
+        e.stopPropagation();
+        closeGameWindow(id);
+    };
+
+    controls.appendChild(maxBtn);
+    controls.appendChild(closeBtn);
+
+    header.appendChild(titleSpan);
+    header.appendChild(controls);
+
+    // Iframe
+    const iframe = document.createElement('iframe');
+    iframe.className = 'game-window-iframe';
+    iframe.src = url;
+    iframe.allowFullscreen = true;
+
+    // Recommendations (hidden unless maximized)
+    const recDiv = document.createElement('div');
+    recDiv.className = 'game-window-recommendations';
+    recDiv.style.display = 'none';
+
+    // Resizer
+    const resizer = document.createElement('div');
+    resizer.className = 'game-window-resizer';
+    resizer.onmousedown = e => resizeGameWindow(e, win);
+
+    // Assemble
+    win.appendChild(header);
+    win.appendChild(iframe);
+    win.appendChild(recDiv);
+    win.appendChild(resizer);
+
+    // Focus on click
+    win.onmousedown = () => focusGameWindow(id);
+
+    // Add to DOM and registry
+    container.appendChild(win);
+    openGameWindows[id] = {win, iframe, recDiv, maximized: false, prev: {}};
+    focusGameWindow(id);
+}
+
+function focusGameWindow(id) {
+    if (!openGameWindows[id]) return;
+    gameWindowZ++;
+    openGameWindows[id].win.style.zIndex = gameWindowZ;
+}
+
+function closeGameWindow(id) {
+    const entry = openGameWindows[id];
+    if (entry) {
+        entry.win.remove();
+        delete openGameWindows[id];
+    }
+}
+
+function toggleMaximizeGameWindow(win, id) {
+    const entry = openGameWindows[id];
+    if (!entry) return;
+    if (!entry.maximized) {
+        // Save previous size/pos
+        entry.prev = {
+            width: win.style.width,
+            height: win.style.height,
+            left: win.style.left,
+            top: win.style.top
+        };
+        win.classList.add('maximized');
+        win.style.width = '100vw';
+        win.style.height = '100vh';
+        win.style.left = '0';
+        win.style.top = '0';
+        entry.maximized = true;
+        // Show recommendations
+        entry.recDiv.style.display = '';
+        renderGameWindowRecommendations(id);
+    } else {
+        // Restore
+        win.classList.remove('maximized');
+        win.style.width = entry.prev.width;
+        win.style.height = entry.prev.height;
+        win.style.left = entry.prev.left;
+        win.style.top = entry.prev.top;
+        entry.maximized = false;
+        // Hide recommendations
+        entry.recDiv.style.display = 'none';
+        entry.recDiv.innerHTML = '';
+    }
+}
+
+function renderGameWindowRecommendations(gameId) {
+    const entry = openGameWindows[gameId];
+    if (!entry) return;
     const t = translations[currentLang];
     const tLang = currentLang;
     const recs = getRecommendedGames(gameId);
-    document.getElementById('recommendations').innerHTML = `
+    entry.recDiv.innerHTML = `
         <h3>${t.recommended}</h3>
         ${recs.map(game => {
-            // Translate tags for recommendations using tag key
             const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
-            // Use translated name if available
             const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
             return `
             <div class="rec-item" onclick="loadGame(${game.id})">
@@ -516,9 +701,52 @@ function showRecommendations(gameId) {
     `;
 }
 
-function closeFrame() {
-    document.getElementById('fullscreenOverlay').style.display = 'none';
-    document.getElementById('gameFrame').src = '';
+// Drag logic
+function dragGameWindow(e, win) {
+    if (win.classList.contains('maximized')) return;
+    e.preventDefault();
+    focusGameWindow(win.dataset.gameId);
+    let startX = e.clientX, startY = e.clientY;
+    let rect = win.getBoundingClientRect();
+    let offsetX = startX - rect.left, offsetY = startY - rect.top;
+    function onMove(ev) {
+        let x = ev.clientX - offsetX;
+        let y = ev.clientY - offsetY;
+        // Clamp to viewport
+        x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
+        y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
+        win.style.left = x + 'px';
+        win.style.top = y + 'px';
+    }
+    function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+}
+
+// Resize logic
+function resizeGameWindow(e, win) {
+    if (win.classList.contains('maximized')) return;
+    e.preventDefault();
+    focusGameWindow(win.dataset.gameId);
+    let startX = e.clientX, startY = e.clientY;
+    let startW = win.offsetWidth, startH = win.offsetHeight;
+    function onMove(ev) {
+        let newW = Math.max(320, startW + (ev.clientX - startX));
+        let newH = Math.max(220, startH + (ev.clientY - startY));
+        newW = Math.min(window.innerWidth - win.offsetLeft, newW);
+        newH = Math.min(window.innerHeight - win.offsetTop, newH);
+        win.style.width = newW + 'px';
+        win.style.height = newH + 'px';
+    }
+    function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
 }
 
 // --- Favourites and Recently Played Management ---
