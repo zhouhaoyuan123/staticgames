@@ -51,7 +51,8 @@
             script.onload = callback;
             document.head.appendChild(script);
         }
-        loadScript("game_list.js?="+Date.now(), function() {
+        const cache_lim = 60 * 60 * 24;
+        loadScript("game_list.js?="+ Math.floor(Date.now() / cache_lim), function() {
             console.log("Game list loaded");
         });
     </script>
