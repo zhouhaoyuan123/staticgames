@@ -10,6 +10,7 @@
     <meta name="keywords" content="games, minigames, apps, static">
     <meta name="description" content="Discover and play a variety of static apps and games on our platform. Find your favorites and explore new experiences.">
     <script>
+        const cache_lim = 60 * 60 * 24 * 1000;
         // Theme loading functionality
         function getThemeFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -24,7 +25,7 @@
         
         function loadTheme() {
             const theme = getThemeFromURL();
-            const cssFile = theme === 'default' ? 'styles.css' : `themes/${theme}.css`;
+            const cssFile = theme === 'default' ? 'styles.css' : `themes/${theme}.css?v=${Math.floor(Date.now() / cache_lim)}`;
             
             // Create and load the CSS file
             const link = document.createElement('link');
@@ -51,7 +52,6 @@
             script.onload = callback;
             document.head.appendChild(script);
         }
-        const cache_lim = 60 * 60 * 24;
         loadScript("game_list.js?="+ Math.floor(Date.now() / cache_lim), function() {
             console.log("Game list loaded");
         });

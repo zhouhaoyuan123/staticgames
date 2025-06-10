@@ -168,7 +168,7 @@ function setTheme(theme) {
     if (themeObj && themeObj.js) {
         // Load JS file as a script element
         const script = document.createElement('script');
-        script.src = themeObj.js + '?v=' + Date.now();
+        script.src = themeObj.js + '?v=' + Math.floor(Date.now() / cache_lim);
         script.onload = function() {};
         document.head.appendChild(script);
         window._themeScript = script;
