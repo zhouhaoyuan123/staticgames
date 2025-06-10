@@ -60,6 +60,19 @@ function setLanguage(lang) {
     // Ensure recently played and favourites sections update language immediately
     renderFavouritesSection();
     renderRecentlyPlayedSection();
+
+    // Update open game window titles to new language
+    updateOpenGameWindowTitles();
+}
+
+// Update titles of open game windows when language changes
+function updateOpenGameWindowTitles() {
+    const tLang = currentLang;
+    Object.values(openGameWindows).forEach(({win, game}) => {
+        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
+        const titleSpan = win.querySelector('.game-window-title');
+        if (titleSpan) titleSpan.textContent = name;
+    });
 }
 
 function updateUIText() {
@@ -552,7 +565,9 @@ function createGameWindow({id, title, url, game}) {
     // Header
     const header = document.createElement('div');
     header.className = 'game-window-header';
+    // Attach both mouse and touch drag handlers
     header.onmousedown = e => dragGameWindow(e, win);
+    header.ontouchstart = e => dragGameWindow(e, win);
 
     // Title
     const titleSpan = document.createElement('span');
@@ -616,7 +631,7 @@ function createGameWindow({id, title, url, game}) {
 
     // Add to DOM and registry
     container.appendChild(win);
-    openGameWindows[id] = {win, iframe, recDiv, maximized: false, prev: {}};
+    openGameWindows[id] = {win, iframe, recDiv, game, maximized: false, prev: {}};
     focusGameWindow(id);
 }
 
@@ -688,29 +703,55 @@ function renderGameWindowRecommendations(gameId) {
     `;
 }
 
-// Drag logic
+// Drag logic (mouse and touch support)
 function dragGameWindow(e, win) {
     if (win.classList.contains('maximized')) return;
-    e.preventDefault();
-    focusGameWindow(win.dataset.gameId);
-    let startX = e.clientX, startY = e.clientY;
-    let rect = win.getBoundingClientRect();
-    let offsetX = startX - rect.left, offsetY = startY - rect.top;
-    function onMove(ev) {
-        let x = ev.clientX - offsetX;
-        let y = ev.clientY - offsetY;
-        // Clamp to viewport
-        x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
-        y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
-        win.style.left = x + 'px';
-        win.style.top = y + 'px';
+    // Prevent default for touch and mouse
+    if (e.type === "touchstart") {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        focusGameWindow(win.dataset.gameId);
+        let startX = touch.clientX, startY = touch.clientY;
+        let rect = win.getBoundingClientRect();
+        let offsetX = startX - rect.left, offsetY = startY - rect.top;
+        function onMove(ev) {
+            if (ev.touches.length !== 1) return;
+            const t = ev.touches[0];
+            let x = t.clientX - offsetX;
+            let y = t.clientY - offsetY;
+            x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
+            y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
+            win.style.left = x + 'px';
+            win.style.top = y + 'px';
+        }
+        function onUp() {
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onUp);
+        }
+        document.addEventListener('touchmove', onMove, {passive: false});
+        document.addEventListener('touchend', onUp);
+    } else {
+        e.preventDefault();
+        focusGameWindow(win.dataset.gameId);
+        let startX = e.clientX, startY = e.clientY;
+        let rect = win.getBoundingClientRect();
+        let offsetX = startX - rect.left, offsetY = startY - rect.top;
+        function onMove(ev) {
+            let x = ev.clientX - offsetX;
+            let y = ev.clientY - offsetY;
+            x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
+            y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
+            win.style.left = x + 'px';
+            win.style.top = y + 'px';
+        }
+        function onUp() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
     }
-    function onUp() {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
 }
 
 // Resize logic

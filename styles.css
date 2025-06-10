@@ -698,6 +698,14 @@ body, html {
     user-select: none;
 }
 
+/* Add for touch devices: show grab cursor */
+@media (pointer: coarse) {
+    .game-window-header {
+        cursor: grab;
+        touch-action: none;
+    }
+}
+
 .game-window-title {
     font-weight: bold;
     font-size: 1.1em;
