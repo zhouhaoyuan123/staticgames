@@ -160,31 +160,18 @@ function setTheme(theme) {
     if (window.themeConfig && Array.isArray(window.themeConfig.availableThemes)) {
         themeObj = window.themeConfig.availableThemes.find(t => t.value === theme);
     }
-    // Remove any previous theme worker
-    if (window._themeWorker) {
-        window._themeWorker.terminate();
-        window._themeWorker = null;
+    // Remove any previous theme script
+    if (window._themeScript) {
+        window._themeScript.remove();
+        window._themeScript = null;
     }
     if (themeObj && themeObj.js) {
-        // Load JS file and run in a worker
-        fetch(themeObj.js)
-            .then(resp => resp.text())
-            .then(jsCode => {
-                const worker = new Worker(URL.createObjectURL(new Blob([jsCode], {type: "application/javascript"})));
-                window._themeWorker = worker;
-                // Optionally, send initial data to the worker
-                worker.postMessage({type: "init", theme});
-                // Optionally, listen for messages from the worker
-                worker.onmessage = function(e) {
-                    // You can handle theme-specific messages here
-                    // Example: apply CSS variables, etc.
-                    if (e.data && e.data.cssVars) {
-                        for (const [k, v] of Object.entries(e.data.cssVars)) {
-                            document.documentElement.style.setProperty(k, v);
-                        }
-                    }
-                };
-            });
+        // Load JS file as a script element
+        const script = document.createElement('script');
+        script.src = themeObj.js + '?v=' + Date.now();
+        script.onload = function() {};
+        document.head.appendChild(script);
+        window._themeScript = script;
     }
     // Remove theme param from URL so it doesn't override user choice on reload
     const url = new URL(window.location.href);
