@@ -385,6 +385,10 @@ function getGameGif(game, lang) {
     return null;
 }
 
+// --- Pagination fragment config ---
+const PAGINATION_PRELOAD_PAGES = 2; // Number of pages after current to pre-render
+let gamePageFragments = {}; // { pageNum: HTML string }
+
 function displayGames(games) {
     const t = translations[currentLang];
     const tLang = currentLang;
@@ -394,43 +398,56 @@ function displayGames(games) {
     const nonFavGames = games.filter(g => !favIds.includes(g.id));
     const orderedGames = [...favGames, ...nonFavGames];
 
-    const startIdx = (currentPage - 1) * gamesPerPage;
-    const paginatedGames = orderedGames.slice(startIdx, startIdx + gamesPerPage);
+    const totalGames = orderedGames.length;
+    const pageCount = Math.ceil(totalGames / gamesPerPage);
 
-    const isMobile = isTouchDevice();
-    document.getElementById('gameList').innerHTML = paginatedGames.map((game, idx) => {
-        // Translate tags for display using tag key
-        const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
-        // Use translated name/author if available
-        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
-        const author = (game.author_i18n && game.author_i18n[tLang]) || game.author;
-        // Image/gif logic
-        const imgSrc = getGameImage(game, tLang);
-        const gifSrc = getGameGif(game, tLang);
-        // Determine if gif should be shown by default on mobile for this game
-        const playGifOnMobile = (typeof game.playGifOnMobile === "boolean") ? game.playGifOnMobile : true;
-        const showGif = isMobile && gifSrc && playGifOnMobile;
-        let imgHtml = '';
-        if (imgSrc || gifSrc) {
-            imgHtml = `
-                <span class="game-thumb-wrapper">
-                    ${imgSrc ? `<img class="game-thumb game-thumb-static" src="${imgSrc}" loading="lazy" alt="${name}" style="${showGif ? 'opacity:0;' : ''}">` : ''}
-                    ${gifSrc ? `<img class="game-thumb game-thumb-gif" src="${gifSrc}" loading="lazy" alt="${name}" style="${showGif ? 'opacity:1;z-index:2;' : ''}">` : ''}
-                </span>
+    // Prepare fragments for current and next N pages
+    gamePageFragments = {};
+    for (let i = 0; i < PAGINATION_PRELOAD_PAGES + 1; ++i) {
+        const pageNum = currentPage + i;
+        if (pageNum > pageCount) break;
+        const startIdx = (pageNum - 1) * gamesPerPage;
+        const paginatedGames = orderedGames.slice(startIdx, startIdx + gamesPerPage);
+        gamePageFragments[pageNum] = paginatedGames.map((game, idx) => {
+            // Translate tags for display using tag key
+            const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
+            // Use translated name/author if available
+            const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
+            const author = (game.author_i18n && game.author_i18n[tLang]) || game.author;
+            // Image/gif logic
+            const imgSrc = getGameImage(game, tLang);
+            const gifSrc = getGameGif(game, tLang);
+            // Determine if gif should be shown by default on mobile for this game
+            const isMobile = isTouchDevice();
+            const playGifOnMobile = (typeof game.playGifOnMobile === "boolean") ? game.playGifOnMobile : true;
+            const showGif = isMobile && gifSrc && playGifOnMobile;
+            let imgHtml = '';
+            if (imgSrc || gifSrc) {
+                imgHtml = `
+                    <span class="game-thumb-wrapper">
+                        ${imgSrc ? `<img class="game-thumb game-thumb-static" src="${imgSrc}" loading="lazy" alt="${name}" style="${showGif ? 'opacity:0;' : ''}">` : ''}
+                        ${gifSrc ? `<img class="game-thumb game-thumb-gif" src="${gifSrc}" loading="lazy" alt="${name}" style="${showGif ? 'opacity:1;z-index:2;' : ''}">` : ''}
+                    </span>
+                `;
+            }
+            // Add favourite icon
+            const favIcon = `<span class="fav-icon" title="${isFavourite(game.id) ? (t.removeFavourite || "Remove from favourites") : (t.addFavourite || "Add to favourites")}" onclick="event.stopPropagation();toggleFavourite(${game.id});return false;">${isFavourite(game.id) ? "★" : "☆"}</span>`;
+            return `
+            <div class="game-card" onclick="loadGame(${game.id})">
+                ${favIcon}
+                ${imgHtml}
+                <h3>${name}</h3>
+                <p>${t.by} ${author} (${game.email})</p>
+                <p>${t.tags}: ${tagLabels.join(', ')}</p>
+            </div>
             `;
-        }
-        // Add favourite icon
-        const favIcon = `<span class="fav-icon" title="${isFavourite(game.id) ? (t.removeFavourite || "Remove from favourites") : (t.addFavourite || "Add to favourites")}" onclick="event.stopPropagation();toggleFavourite(${game.id});return false;">${isFavourite(game.id) ? "★" : "☆"}</span>`;
-        return `
-        <div class="game-card" onclick="loadGame(${game.id})">
-            ${favIcon}
-            ${imgHtml}
-            <h3>${name}</h3>
-            <p>${t.by} ${author} (${game.email})</p>
-            <p>${t.tags}: ${tagLabels.join(', ')}</p>
-        </div>
-        `;
-    }).join('');
+        }).join('');
+    }
+
+    // Only append the current page fragment to DOM after all fragments are prepared
+    document.getElementById('gameList').innerHTML = gamePageFragments[currentPage] || '';
+
+    // Optionally, you could pre-cache the next pages' fragments for smoother UX
 }
 
 function renderPagination(totalGames = gameDatabase.length) {
