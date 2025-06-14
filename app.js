@@ -723,8 +723,11 @@ function renderGameWindowRecommendations(gameId) {
 // Drag logic (mouse and touch support)
 function dragGameWindow(e, win) {
     if (win.classList.contains('maximized')) return;
+    let isTouch = e.type === "touchstart";
+    let moveListener, upListener;
+
     // Prevent default for touch and mouse
-    if (e.type === "touchstart") {
+    if (isTouch) {
         if (e.touches.length !== 1) return;
         e.preventDefault();
         const touch = e.touches[0];
@@ -732,8 +735,9 @@ function dragGameWindow(e, win) {
         let startX = touch.clientX, startY = touch.clientY;
         let rect = win.getBoundingClientRect();
         let offsetX = startX - rect.left, offsetY = startY - rect.top;
-        function onMove(ev) {
+        moveListener = function(ev) {
             if (ev.touches.length !== 1) return;
+            ev.preventDefault();
             const t = ev.touches[0];
             let x = t.clientX - offsetX;
             let y = t.clientY - offsetY;
@@ -741,33 +745,33 @@ function dragGameWindow(e, win) {
             y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
             win.style.left = x + 'px';
             win.style.top = y + 'px';
-        }
-        function onUp() {
-            document.removeEventListener('touchmove', onMove);
-            document.removeEventListener('touchend', onUp);
-        }
-        document.addEventListener('touchmove', onMove, {passive: false});
-        document.addEventListener('touchend', onUp);
+        };
+        upListener = function() {
+            document.removeEventListener('touchmove', moveListener, {passive:false});
+            document.removeEventListener('touchend', upListener);
+        };
+        document.addEventListener('touchmove', moveListener, {passive:false});
+        document.addEventListener('touchend', upListener);
     } else {
         e.preventDefault();
         focusGameWindow(win.dataset.gameId);
         let startX = e.clientX, startY = e.clientY;
         let rect = win.getBoundingClientRect();
         let offsetX = startX - rect.left, offsetY = startY - rect.top;
-        function onMove(ev) {
+        moveListener = function(ev) {
             let x = ev.clientX - offsetX;
             let y = ev.clientY - offsetY;
             x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
             y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
             win.style.left = x + 'px';
             win.style.top = y + 'px';
-        }
-        function onUp() {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-        }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        };
+        upListener = function() {
+            document.removeEventListener('mousemove', moveListener);
+            document.removeEventListener('mouseup', upListener);
+        };
+        document.addEventListener('mousemove', moveListener);
+        document.addEventListener('mouseup', upListener);
     }
 }
 
