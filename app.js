@@ -604,6 +604,11 @@ function createGameWindow({id, title, url, game}) {
         e.stopPropagation();
         toggleMaximizeGameWindow(win, id);
     };
+    // Add touch support for maximize
+    maxBtn.ontouchstart = e => {
+        e.stopPropagation();
+        toggleMaximizeGameWindow(win, id);
+    };
 
     // Close button
     const closeBtn = document.createElement('button');
@@ -611,6 +616,11 @@ function createGameWindow({id, title, url, game}) {
     closeBtn.title = 'Close';
     closeBtn.innerHTML = '✕';
     closeBtn.onclick = e => {
+        e.stopPropagation();
+        closeGameWindow(id);
+    };
+    // Add touch support for close
+    closeBtn.ontouchstart = e => {
         e.stopPropagation();
         closeGameWindow(id);
     };
@@ -670,18 +680,21 @@ function toggleMaximizeGameWindow(win, id) {
     const entry = openGameWindows[id];
     if (!entry) return;
     if (!entry.maximized) {
-        // Save previous size/pos
+        // Save previous size/pos and z-index
         entry.prev = {
             width: win.style.width,
             height: win.style.height,
             left: win.style.left,
-            top: win.style.top
+            top: win.style.top,
+            zIndex: win.style.zIndex
         };
         win.classList.add('maximized');
         win.style.width = '100vw';
         win.style.height = '100vh';
         win.style.left = '0';
         win.style.top = '0';
+        // Set z-index higher than any other window
+        win.style.zIndex = ++gameWindowZ + 1000;
         entry.maximized = true;
         // Show recommendations
         entry.recDiv.style.display = '';
@@ -693,6 +706,7 @@ function toggleMaximizeGameWindow(win, id) {
         win.style.height = entry.prev.height;
         win.style.left = entry.prev.left;
         win.style.top = entry.prev.top;
+        win.style.zIndex = entry.prev.zIndex;
         entry.maximized = false;
         // Hide recommendations
         entry.recDiv.style.display = 'none';
