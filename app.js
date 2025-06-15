@@ -131,13 +131,40 @@ function createThemeSelector() {
     ];
     const t = translations[currentLang];
     const currentTheme = getThemeFromURLorStorage();
+
+    // --- Group themes by tag ---
+    let tagNames = {};
+    if (window.themeConfig && window.themeConfig.tagNames) {
+        tagNames = window.themeConfig.tagNames[currentLang] || window.themeConfig.tagNames.en || {};
+    }
+    // Build tag->themes map
+    const tagMap = {};
     themes.forEach(themeObj => {
-        const opt = document.createElement('option');
-        opt.value = themeObj.value;
-        // Use translation if available, fallback to config label
-        opt.textContent = (t.themeNames && t.themeNames[themeObj.value]) || themeObj.label || themeObj.value;
-        if (themeObj.value === currentTheme) opt.selected = true;
-        sel.appendChild(opt);
+        const tags = Array.isArray(themeObj.tags) ? themeObj.tags : ["other"];
+        tags.forEach(tag => {
+            if (!tagMap[tag]) tagMap[tag] = [];
+            tagMap[tag].push(themeObj);
+        });
+    });
+    // Sort tags alphabetically by localized name
+    const sortedTags = Object.keys(tagMap).sort((a, b) => {
+        const an = tagNames[a] || a;
+        const bn = tagNames[b] || b;
+        return an.localeCompare(bn);
+    });
+    // Render optgroups
+    sortedTags.forEach(tag => {
+        const group = document.createElement('optgroup');
+        group.label = tagNames[tag] || tag;
+        tagMap[tag].forEach(themeObj => {
+            const opt = document.createElement('option');
+            opt.value = themeObj.value;
+            // Use translation if available, fallback to config label
+            opt.textContent = (t.themeNames && t.themeNames[themeObj.value]) || themeObj.label || themeObj.value;
+            if (themeObj.value === currentTheme) opt.selected = true;
+            group.appendChild(opt);
+        });
+        sel.appendChild(group);
     });
     sel.onchange = () => {
         setTheme(sel.value);
