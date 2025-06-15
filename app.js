@@ -84,6 +84,8 @@ function updateUIText() {
     document.getElementById('resetBtn').textContent = t.reset;
     document.getElementById('importBtn').textContent = t.importData;
     document.getElementById('exportBtn').textContent = t.exportData;
+    // Timer controls
+    updateTimerUIText();
     // Update theme selector to reflect new language
     updateThemeSelector();
     // Update pagination and recommendations via rerender
@@ -252,6 +254,7 @@ function init() {
     renderFavouritesSection();
     renderRecentlyPlayedSection();
     setLanguage(currentLang); // Ensure language is set after UI is ready
+    updateTimerUIText();
 }
 
 function renderTagCloud() {
@@ -994,6 +997,148 @@ function importUserData(event) {
     // Reset input so user can import again if needed
     event.target.value = "";
 }
+
+// --- TIMER FEATURE ---
+
+let timerState = {
+    duration: 0, // ms
+    remaining: 0, // ms
+    running: false,
+    interval: null,
+    endTime: null
+};
+
+function updateTimerUIText() {
+    const t = translations[currentLang];
+    document.getElementById('timerStartBtn').textContent = t.timerStart || "Start Timer";
+    document.getElementById('timerStopBtn').textContent = t.timerStop || "Stop Timer";
+    document.getElementById('timerMinutes').title = t.timerSetMinutes || "Set minutes";
+}
+
+function formatTimerTime(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${min}:${sec.toString().padStart(2, '0')}`;
+}
+
+function startGameTimer() {
+    const minutes = parseFloat(document.getElementById('timerMinutes').value);
+    if (isNaN(minutes) || minutes < 0.1) return;
+    timerState.duration = minutes * 60 * 1000;
+    timerState.remaining = timerState.duration;
+    timerState.running = true;
+    timerState.endTime = Date.now() + timerState.duration;
+
+    document.getElementById('timerStartBtn').disabled = true;
+    document.getElementById('timerStopBtn').disabled = false;
+    document.getElementById('timerMinutes').disabled = true;
+
+    showTimerProgressBar();
+    updateTimerProgressBar();
+
+    timerState.interval = setInterval(() => {
+        timerState.remaining = timerState.endTime - Date.now();
+        updateTimerProgressBar();
+        if (timerState.remaining <= 0) {
+            stopGameTimer(true);
+            showTimerEndOverlay();
+        }
+    }, 500);
+}
+
+function stopGameTimer(isEnd = false) {
+    timerState.running = false;
+    timerState.endTime = null;
+    if (timerState.interval) clearInterval(timerState.interval);
+    timerState.interval = null;
+    hideTimerProgressBar();
+    document.getElementById('timerStartBtn').disabled = false;
+    document.getElementById('timerStopBtn').disabled = true;
+    document.getElementById('timerMinutes').disabled = false;
+    if (!isEnd) hideTimerEndOverlay();
+}
+
+function showTimerProgressBar() {
+    document.getElementById('timerProgressBar').classList.remove('hidden');
+}
+
+function hideTimerProgressBar() {
+    document.getElementById('timerProgressBar').classList.add('hidden');
+}
+
+function updateTimerProgressBar() {
+    const fill = document.getElementById('timerProgressFill');
+    const text = document.getElementById('timerProgressText');
+    const percent = Math.max(0, Math.min(100, 100 * (timerState.remaining / timerState.duration)));
+    fill.style.width = percent + "%";
+    const t = translations[currentLang];
+    text.textContent = (t.timerRemaining || "Time left") + ": " + formatTimerTime(timerState.remaining);
+}
+
+function showTimerEndOverlay() {
+    const overlay = document.getElementById('timerEndOverlay');
+    overlay.classList.remove('hidden');
+    const t = translations[currentLang];
+    document.getElementById('timerEndTitle').textContent = t.timerEndedTitle || "Time's Up!";
+    document.getElementById('timerEndMsg').textContent = t.timerEndedMsg || "Your game time is over. Please take a break.";
+    document.getElementById('timerReturnBtn').textContent = t.timerReturn || "Return";
+    // Optionally, close all game windows
+    Object.keys(openGameWindows).forEach(closeGameWindow);
+}
+
+function hideTimerEndOverlay() {
+    document.getElementById('timerEndOverlay').classList.add('hidden');
+    stopGameTimer();
+}
+
+// --- Patch updateUIText to update timer controls ---
+function updateUIText() {
+    const t = translations[currentLang];
+    document.getElementById('title').textContent = t.title;
+    document.getElementById('title_banner').textContent = t.title_banner;
+    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+    document.getElementById('searchBtn').textContent = t.search;
+    document.getElementById('resetBtn').textContent = t.reset;
+    document.getElementById('importBtn').textContent = t.importData;
+    document.getElementById('exportBtn').textContent = t.exportData;
+    // Timer controls
+    updateTimerUIText();
+    // Update theme selector to reflect new language
+    updateThemeSelector();
+    // Update pagination and recommendations via rerender
+}
+
+// --- Patch init to update timer controls on load ---
+function init() {
+    // Add language selector to controls
+    const controls = document.querySelector('.controls');
+    if (!document.getElementById('langSelector')) {
+        controls.appendChild(createLanguageSelector());
+    }
+    // Add theme selector to controls
+    if (!document.getElementById('themeSelector')) {
+        controls.appendChild(createThemeSelector());
+    }
+    // Set theme preference if not set
+    let theme = getThemeFromURLorStorage();
+    saveThemePreference(theme);
+    setTheme(theme);
+    renderTagCloud();
+    displayGames(gameDatabase);
+    renderPagination();
+    updateUIText();
+    renderNotices();
+    renderFavouritesSection();
+    renderRecentlyPlayedSection();
+    setLanguage(currentLang); // Ensure language is set after UI is ready
+    updateTimerUIText();
+}
+
+// --- Expose timer functions for HTML ---
+window.startGameTimer = startGameTimer;
+window.stopGameTimer = stopGameTimer;
+window.hideTimerEndOverlay = hideTimerEndOverlay;
 
 // Expose for HTML
 window.setLanguage = setLanguage;

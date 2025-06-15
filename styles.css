@@ -160,7 +160,430 @@ body, html {
     opacity: 1;
 }
 
-/* Responsive breakpoints */
+/* Timer controls */
+.timer-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0 10px;
+}
+
+#timerMinutes {
+    width: 70px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+#timerStartBtn, #timerStopBtn {
+    background: #43a047;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    min-height: 40px;
+    transition: background 0.2s;
+}
+#timerStartBtn[disabled], #timerStopBtn[disabled] {
+    background: #bdbdbd;
+    color: #eee;
+    cursor: not-allowed;
+}
+#timerStopBtn {
+    background: #e53935;
+}
+#timerStartBtn:hover:not([disabled]) {
+    background: #388e3c;
+}
+#timerStopBtn:hover:not([disabled]) {
+    background: #b71c1c;
+}
+
+/* Progress bar */
+.timer-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 10px;
+    background: rgba(0,0,0,0.08);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+}
+.timer-progress-bar.hidden {
+    display: none;
+}
+.timer-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #43a047, #fbc02d 80%, #e53935 100%);
+    width: 0%;
+    transition: width 0.5s linear;
+}
+.timer-progress-text {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    color: #222;
+    font-size: 1rem;
+    font-weight: bold;
+    background: rgba(255,255,255,0.8);
+    padding: 2px 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+    z-index: 5001;
+    pointer-events: none;
+}
+
+/* Timer end overlay */
+.timer-end-overlay {
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30,30,30,0.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.timer-end-overlay.hidden {
+    display: none;
+}
+.timer-end-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 32px 32px 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    text-align: center;
+    max-width: 90vw;
+}
+#timerEndTitle {
+    color: #e53935;
+    font-size: 2rem;
+    margin-bottom: 18px;
+}
+#timerEndMsg {
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 28px;
+}
+#timerReturnBtn {
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    padding: 12px 32px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+#timerReturnBtn:hover {
+    background: #0d47a1;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.header { 
+    padding: 20px;
+    background: #f5f5f5;
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    margin: 0 0 15px 0;
+}
+
+.controls { 
+    display: flex; 
+    flex-wrap: wrap;
+    gap: 10px; 
+    margin: 15px 0; 
+}
+
+.controls input, .controls button, .controls select {
+    font-size: 16px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.controls button {
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.controls button:hover {
+    background: #0056b3;
+}
+
+#searchInput {
+    flex: 1;
+    min-width: 200px;
+}
+
+#tagCloud { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+    width: 100%;
+    margin-top: 10px;
+}
+
+.tag { 
+    padding: 8px 12px; 
+    background: #eee; 
+    cursor: pointer; 
+    border-radius: 20px;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+}
+
+.tag:hover {
+    background: #ddd;
+}
+
+.tag.active {
+    background: #4CAF50;
+    color: white;
+}
+
+.tag.active:hover {
+    background: #45a049;
+}
+
+#gameList { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px; 
+    padding: 20px;
+}
+
+.game-card { 
+    border: 1px solid #ddd; 
+    padding: 20px; 
+    cursor: pointer;
+    border-radius: 8px;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.game-card h3 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.game-card p {
+    font-size: 1rem;
+    margin: 8px 0;
+}
+
+.game-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.game-thumb-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 220px;
+    height: 140px;
+    display: block;
+    margin: 0 auto 12px auto;
+}
+
+.game-thumb {
+    width: 100%;
+    height: 100%;
+    max-width: 220px;
+    max-height: 140px;
+    display: block;
+    position: absolute;
+    left: 0; top: 0;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f5f5f5;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.game-thumb-static {
+    z-index: 1;
+    opacity: 1;
+}
+
+.game-thumb-gif {
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.game-thumb-wrapper:hover .game-thumb-static {
+    opacity: 0;
+}
+
+.game-thumb-wrapper:hover .game-thumb-gif {
+    opacity: 1;
+}
+
+/* Timer controls */
+.timer-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0 10px;
+}
+
+#timerMinutes {
+    width: 70px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+#timerStartBtn, #timerStopBtn {
+    background: #43a047;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    min-height: 40px;
+    transition: background 0.2s;
+}
+#timerStartBtn[disabled], #timerStopBtn[disabled] {
+    background: #bdbdbd;
+    color: #eee;
+    cursor: not-allowed;
+}
+#timerStopBtn {
+    background: #e53935;
+}
+#timerStartBtn:hover:not([disabled]) {
+    background: #388e3c;
+}
+#timerStopBtn:hover:not([disabled]) {
+    background: #b71c1c;
+}
+
+/* Progress bar */
+.timer-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 10px;
+    background: rgba(0,0,0,0.08);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+}
+.timer-progress-bar.hidden {
+    display: none;
+}
+.timer-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #43a047, #fbc02d 80%, #e53935 100%);
+    width: 0%;
+    transition: width 0.5s linear;
+}
+.timer-progress-text {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    color: #222;
+    font-size: 1rem;
+    font-weight: bold;
+    background: rgba(255,255,255,0.8);
+    padding: 2px 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+    z-index: 5001;
+    pointer-events: none;
+}
+
+/* Timer end overlay */
+.timer-end-overlay {
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30,30,30,0.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.timer-end-overlay.hidden {
+    display: none;
+}
+.timer-end-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 32px 32px 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    text-align: center;
+    max-width: 90vw;
+}
+#timerEndTitle {
+    color: #e53935;
+    font-size: 2rem;
+    margin-bottom: 18px;
+}
+#timerEndMsg {
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 28px;
+}
+#timerReturnBtn {
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    padding: 12px 32px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+#timerReturnBtn:hover {
+    background: #0d47a1;
+}
+
 @media (max-width: 768px) {
     body, html {
         font-size: 18px;
