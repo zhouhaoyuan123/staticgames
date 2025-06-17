@@ -462,8 +462,10 @@ function displayGames(games) {
             }
             // Add favourite icon
             const favIcon = `<span class="fav-icon" title="${isFavourite(game.id) ? (t.removeFavourite || "Remove from favourites") : (t.addFavourite || "Add to favourites")}" onclick="event.stopPropagation();toggleFavourite(${game.id});return false;">${isFavourite(game.id) ? "★" : "☆"}</span>`;
+            // Add data-game-id for popup
             return `
-            <div class="game-card" onclick="loadGame(${game.id})">
+            <div class="game-card" onclick="loadGame(${game.id})"
+                data-game-id="${game.id}">
                 ${favIcon}
                 ${imgHtml}
                 <h3>${name}</h3>
@@ -478,6 +480,9 @@ function displayGames(games) {
     document.getElementById('gameList').innerHTML = gamePageFragments[currentPage] || '';
 
     // Optionally, you could pre-cache the next pages' fragments for smoother UX
+
+    // Attach description popup handlers after rendering (fix: always call here)
+    attachGameCardDescHandlers();
 }
 
 function renderPagination(totalGames = gameDatabase.length) {
@@ -1184,3 +1189,92 @@ function renderNotices() {
         .join('');
     document.getElementById('noticePane').innerHTML = notices;
 }
+
+// --- Description Popup Logic ---
+let descPopupTimer = null;
+let descPopupElem = null;
+
+function attachGameCardDescHandlers() {
+    // Remove previous listeners/popups
+    document.querySelectorAll('.game-card').forEach(card => {
+        card.onmousedown = null;
+        card.ontouchstart = null;
+        card.onmouseup = null;
+        card.onmouseleave = null;
+        card.ontouchend = null;
+        card.ontouchcancel = null;
+        card.oncontextmenu = null;
+    });
+    document.querySelectorAll('.game-card').forEach(card => {
+        const gameId = parseInt(card.getAttribute('data-game-id'), 10);
+        if (!gameId) return;
+        // Mouse
+        card.onmousedown = e => {
+            if (e.button !== 0) return; // Only left click
+            descPopupTimer = setTimeout(() => showGameDescPopup(gameId, card), 500);
+        };
+        card.onmouseup = card.onmouseleave = () => {
+            clearTimeout(descPopupTimer);
+        };
+        // Touch
+        card.ontouchstart = e => {
+            descPopupTimer = setTimeout(() => showGameDescPopup(gameId, card), 500);
+        };
+        card.ontouchend = card.ontouchcancel = () => {
+            clearTimeout(descPopupTimer);
+        };
+        // Prevent context menu on long press
+        card.oncontextmenu = e => {
+            e.preventDefault();
+            return false;
+        };
+    });
+}
+
+function showGameDescPopup(gameId, cardElem) {
+    clearTimeout(descPopupTimer);
+    if (descPopupElem) descPopupElem.remove();
+    const game = gameDatabase.find(g => g.id === gameId);
+    if (!game) return;
+    const t = translations[currentLang];
+    const desc = (game.description_i18n && game.description_i18n[currentLang]) || game.description || "";
+    const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
+    // Create popup
+    const popup = document.createElement('div');
+    popup.className = 'game-desc-popup';
+    popup.innerHTML = `
+        <button class="desc-close-btn" onclick="hideGameDescPopup()" title="Close">✕</button>
+        <div class="desc-title">${t.description || "Description"}</div>
+        <div class="desc-name"><b>${name}</b></div>
+        <div class="desc-body" style="margin-top:8px;">${desc}</div>
+    `;
+    // Centered in viewport
+    document.body.appendChild(popup);
+    descPopupElem = popup;
+    // Dismiss on click outside or ESC
+    setTimeout(() => {
+        document.addEventListener('mousedown', descPopupOutsideHandler, {capture:true});
+        document.addEventListener('touchstart', descPopupOutsideHandler, {capture:true});
+        document.addEventListener('keydown', descPopupEscHandler);
+    }, 10);
+}
+function hideGameDescPopup() {
+    if (descPopupElem) {
+        descPopupElem.remove();
+        descPopupElem = null;
+    }
+    document.removeEventListener('mousedown', descPopupOutsideHandler, {capture:true});
+    document.removeEventListener('touchstart', descPopupOutsideHandler, {capture:true});
+    document.removeEventListener('keydown', descPopupEscHandler);
+}
+function descPopupOutsideHandler(e) {
+    if (descPopupElem && !descPopupElem.contains(e.target)) {
+        hideGameDescPopup();
+    }
+}
+function descPopupEscHandler(e) {
+    if (e.key === "Escape") hideGameDescPopup();
+}
+
+// Expose for HTML close button
+window.hideGameDescPopup = hideGameDescPopup;

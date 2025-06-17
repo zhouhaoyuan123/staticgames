@@ -37,7 +37,15 @@ const gameDatabase = [
             de: "images/rocket_de.gif",
             zh: "images/rocket_zh.gif"
         },
-        playGifOnMobile: true
+        playGifOnMobile: true,
+        description: "A fast-paced rocket flying game. Avoid obstacles and reach the goal!",
+        description_i18n: {
+            en: "A fast-paced rocket flying game. Avoid obstacles and reach the goal!",
+            es: "Un juego de cohetes rápido. ¡Evita obstáculos y llega a la meta!",
+            fr: "Un jeu de fusée rapide. Évitez les obstacles et atteignez l'objectif !",
+            de: "Ein rasantes Raketenspiel. Weiche Hindernissen aus und erreiche das Ziel!",
+            zh: "快节奏的火箭飞行游戏。避开障碍物，冲向终点！"
+        }
     },
     {
         id: 2,
@@ -60,8 +68,16 @@ const gameDatabase = [
         url: "games/fish_game.html",
         email: "a@example.com",
         tags: ["singleplayer","Aaron"],
-        popularity: 0
+        popularity: 0,
         // playGifOnMobile not set, will use default (true)
+        description: "Catch as many fish as you can before time runs out.",
+        description_i18n: {
+            en: "Catch as many fish as you can before time runs out.",
+            es: "Atrapa tantos peces como puedas antes de que se acabe el tiempo.",
+            fr: "Attrapez autant de poissons que possible avant la fin du temps.",
+            de: "Fange so viele Fische wie möglich, bevor die Zeit abläuft.",
+            zh: "在时间结束前尽可能多地捕鱼。"
+        }
     },
     {
         id: 3,
@@ -85,7 +101,15 @@ const gameDatabase = [
         email: "a@example.com",
         tags: ["singleplayer","Aaron"],
         popularity: 0,
-        playGifOnMobile: false
+        playGifOnMobile: false,
+        description: "Navigate through the maze and find the exit.",
+        description_i18n: {
+            en: "Navigate through the maze and find the exit.",
+            es: "Navega por el laberinto y encuentra la salida.",
+            fr: "Naviguez dans le labyrinthe et trouvez la sortie.",
+            de: "Finde den Ausgang im Labyrinth.",
+            zh: "在迷宫中找到出口。"
+        }
     },
     {
         id: 4,
@@ -108,7 +132,15 @@ const gameDatabase = [
         url: "themes/README.md",
         email: "a@example.com",
         tags: ["docs"],
-        popularity: 10
+        popularity: 10,
+        description: "Documentation and usage instructions for the platform.",
+        description_i18n: {
+            en: "Documentation and usage instructions for the platform.",
+            es: "Documentación e instrucciones de uso para la plataforma.",
+            fr: "Documentation et instructions d'utilisation de la plateforme.",
+            de: "Dokumentation und Gebrauchsanweisung für die Plattform.",
+            zh: "平台的文档和使用说明。"
+        }
     },
     {
         id: 5,
@@ -131,7 +163,15 @@ const gameDatabase = [
         url: "games/mouse.html",
         email: "a@example.com",
         tags: ["singleplayer","Aaron","mobile-friendly"],
-        popularity: 0
+        popularity: 0,
+        description: "Trap the mouse before it escapes!",
+        description_i18n: {
+            en: "Trap the mouse before it escapes!",
+            es: "¡Atrapa al ratón antes de que escape!",
+            fr: "Attrapez la souris avant qu'elle ne s'échappe !",
+            de: "Fange die Maus, bevor sie entkommt!",
+            zh: "在老鼠逃跑前把它困住！"
+        }
     },
     // Add more games...
 ];

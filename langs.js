@@ -14,6 +14,7 @@ const translations = {
         recommended: "Recommended Games",
         by: "By",
         tags: "Tags",
+        description: "Description",
         themeNames: {
             default: "Default",
             dark: "Dark",
@@ -53,6 +54,7 @@ const translations = {
         recommended: "Juegos recomendados",
         by: "Por",
         tags: "Etiquetas",
+        description: "Descripción",
         themeNames: {
             default: "Predeterminado",
             dark: "Oscuro",
@@ -92,6 +94,7 @@ const translations = {
         recommended: "Jeux recommandés",
         by: "Par",
         tags: "Tags",
+        description: "Description",
         themeNames: {
             default: "Défaut",
             dark: "Sombre",
@@ -131,6 +134,7 @@ const translations = {
         recommended: "Empfohlene Spiele",
         by: "Von",
         tags: "Stichworte",
+        description: "Beschreibung",
         themeNames: {
             default: "Standard",
             dark: "Dunkel",
@@ -170,6 +174,7 @@ const translations = {
         recommended: "推荐游戏",
         by: "作者",
         tags: "标签",
+        description: "简介",
         themeNames: {
             default: "默认",
             dark: "深色",
