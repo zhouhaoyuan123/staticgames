@@ -688,8 +688,19 @@ function createGameWindow({id, title, url, game}) {
     win.appendChild(recDiv);
     win.appendChild(resizer);
 
-    // Focus on click
-    win.onmousedown = () => focusGameWindow(id);
+    // Focus on click (fix: only focus if not touch event)
+    win.onmousedown = (e) => {
+        // Only focus if not touch event (prevents tap-through on mobile)
+        if (!e || e.pointerType === undefined || e.pointerType === "mouse") {
+            focusGameWindow(id);
+        }
+    };
+    // Prevent tap-through on touch devices
+    win.ontouchstart = (e) => {
+        // Prevent tap-through by stopping propagation
+        e.stopPropagation();
+        focusGameWindow(id);
+    };
 
     // Add to DOM and registry
     container.appendChild(win);
@@ -706,6 +717,10 @@ function focusGameWindow(id) {
 function closeGameWindow(id) {
     const entry = openGameWindows[id];
     if (entry) {
+        // Prevent tap-through: add a short blocker overlay on mobile/touch
+        if (isTouchDevice()) {
+            showTapBlocker();
+        }
         entry.win.remove();
         delete openGameWindows[id];
     }
@@ -1210,7 +1225,7 @@ function attachGameCardDescHandlers() {
         if (!gameId) return;
         // Mouse
         card.onmousedown = e => {
-            if (e.button !== 0) return; // Only left click
+            if (e.button !== 2) return; // Only left click
             descPopupTimer = setTimeout(() => showGameDescPopup(gameId, card), 500);
         };
         card.onmouseup = card.onmouseleave = () => {
@@ -1278,3 +1293,25 @@ function descPopupEscHandler(e) {
 
 // Expose for HTML close button
 window.hideGameDescPopup = hideGameDescPopup;
+
+// --- Tap Blocker Overlay for Mobile ---
+function showTapBlocker() {
+    let blocker = document.getElementById('tapBlockerOverlay');
+    if (!blocker) {
+        blocker = document.createElement('div');
+        blocker.id = 'tapBlockerOverlay';
+        blocker.style.position = 'fixed';
+        blocker.style.left = '0';
+        blocker.style.top = '0';
+        blocker.style.width = '100vw';
+        blocker.style.height = '100vh';
+        blocker.style.zIndex = '999999';
+        blocker.style.background = 'transparent';
+        blocker.style.pointerEvents = 'auto';
+        document.body.appendChild(blocker);
+    }
+    blocker.style.display = 'block';
+    setTimeout(() => {
+        blocker.style.display = 'none';
+    }, 350); // 350ms is enough to absorb the tap
+}
