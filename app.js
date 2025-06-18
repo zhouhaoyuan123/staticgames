@@ -761,6 +761,10 @@ function toggleMaximizeGameWindow(win, id) {
         // Hide recommendations
         entry.recDiv.style.display = 'none';
         entry.recDiv.innerHTML = '';
+        // Prevent tap-through: add a short blocker overlay on mobile/touch
+        if (isTouchDevice()) {
+            showTapBlocker();
+        }
     }
 }
 
