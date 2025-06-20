@@ -23,6 +23,9 @@ function detectLanguage() {
     const urlParams = new URLSearchParams(window.location.search);
     let lang = urlParams.get('lang');
     if (lang && supportedLanguages.includes(lang)) return lang;
+    if (lang && !supportedLanguages.includes(lang)) {
+        window._showLangThemeWarning = true;
+    }
     // Try localStorage next
     lang = localStorage.getItem('lang');
     if (lang && supportedLanguages.includes(lang)) return lang;
@@ -189,10 +192,13 @@ function setTheme(theme) {
     link.href = cssFile;
     link.onerror = function() {
         // Fallback to default theme if theme file doesn't exist
+        window._showLangThemeWarning = true;
         const fallbackLink = document.createElement('link');
         fallbackLink.rel = 'stylesheet';
         fallbackLink.href = 'styles.css';
         document.head.appendChild(fallbackLink);
+        // Re-render notices to show warning
+        if (typeof renderNotices === "function") setTimeout(renderNotices, 0);
     };
     document.head.appendChild(link);
 
@@ -1198,6 +1204,7 @@ function renderNotices() {
     if (!config || !config.notices || !config.header) return;
     const header = config.header[lang] || config.header.en || "Notice";
     const notices = config.notices
+        .filter(n => typeof n.shouldShow !== "function" || n.shouldShow())
         .map(n => {
             const type = n.type || "default";
             return `<div class="notice-box ${type}">
