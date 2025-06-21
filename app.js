@@ -259,7 +259,8 @@ function init() {
     renderNotices();
     renderFavouritesSection();
     renderRecentlyPlayedSection();
-    setLanguage(currentLang); // Ensure language is set after UI is ready
+    // Remove this line to prevent infinite recursion:
+    // setLanguage(currentLang); // Ensure language is set after UI is ready
     updateTimerUIText();
 }
 
@@ -1086,7 +1087,7 @@ function stopGameTimer(isEnd = false) {
     document.getElementById('timerStartBtn').disabled = false;
     document.getElementById('timerStopBtn').disabled = true;
     document.getElementById('timerMinutes').disabled = false;
-    if (!isEnd) hideTimerEndOverlay();
+    //if (!isEnd) hideTimerEndOverlay();
 }
 
 function showTimerProgressBar() {
