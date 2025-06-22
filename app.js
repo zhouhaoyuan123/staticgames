@@ -993,7 +993,20 @@ function removeRecentlyPlayed(gameId) {
 function exportUserData() {
     const data = {
         favourites: getFavourites(),
-        recentlyPlayed: getRecentlyPlayed()
+        recentlyPlayed: getRecentlyPlayed(),
+        autoSaveWindows: getAutoSaveWindowsSetting(),
+        openWindows: Object.keys(openGameWindows).map(id => {
+            const entry = openGameWindows[id];
+            if (!entry || !entry.win) return null;
+            return {
+                id: Number(id),
+                left: entry.win.style.left,
+                top: entry.win.style.top,
+                width: entry.win.style.width,
+                height: entry.win.style.height,
+                maximized: !!entry.maximized
+            };
+        }).filter(Boolean),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
     const url = URL.createObjectURL(blob);
@@ -1016,6 +1029,36 @@ function importUserData(event) {
             const data = JSON.parse(e.target.result);
             if (Array.isArray(data.favourites)) setFavourites(data.favourites);
             if (Array.isArray(data.recentlyPlayed)) localStorage.setItem(RECENT_KEY, JSON.stringify(data.recentlyPlayed));
+            //for saved windows
+            var autoSaveCheckbox = document.getElementById('autoSaveWindowsCheckbox');
+            autoSaveCheckbox.checked = data.autoSaveWindows;
+            if (data.autoSaveWindows && Array.isArray(data.openWindows)) {
+                data.openWindows.forEach(winData => {
+                    if (winData && winData.id && !openGameWindows[winData.id]) {
+                        createGameWindow({
+                            id: winData.id,
+                            title: gameDatabase.find(g => g.id === winData.id)?.name || "Game " + winData.id,
+                            url: gameDatabase.find(g => g.id === winData.id)?.url || "#",
+                            game: gameDatabase.find(g => g.id === winData.id) || {}
+                        });
+                        const entry = openGameWindows[winData.id];
+                        if (entry && entry.win) {
+                            entry.win.style.left = winData.left || '40px';
+                            entry.win.style.top = winData.top || '40px';
+                            entry.win.style.width = winData.width || '600px';
+                            entry.win.style.height = winData.height || '420px';
+                            if (winData.maximized) {
+                                toggleMaximizeGameWindow(entry.win, winData.id);
+                            }
+                        }
+                    }
+                });
+                //shift autosave checkbox
+                setAutoSaveWindowsSetting(1);
+            }
+            else {
+                setAutoSaveWindowsSetting(0);
+            }
             renderFavouritesSection();
             renderRecentlyPlayedSection();
             applyFilters();
@@ -1327,3 +1370,185 @@ function showTapBlocker() {
         blocker.style.display = 'none';
     }, 350); // 350ms is enough to absorb the tap
 }
+
+// --- Auto-Save Open Game Windows ---
+const SAVED_WINDOWS_KEY = "openGameWindowsState";
+const AUTO_SAVE_WINDOWS_KEY = "autoSaveGameWindows";
+
+function saveOpenGameWindows() {
+    const openIds = Object.keys(openGameWindows).map(id => {
+        const entry = openGameWindows[id];
+        if (!entry || !entry.win) return null;
+        return {
+            id: Number(id),
+            left: entry.win.style.left,
+            top: entry.win.style.top,
+            width: entry.win.style.width,
+            height: entry.win.style.height,
+            maximized: !!entry.maximized
+        };
+    }).filter(Boolean);
+    localStorage.setItem(SAVED_WINDOWS_KEY, JSON.stringify(openIds));
+}
+
+function restoreOpenGameWindows() {
+    let saved = [];
+    try {
+        saved = JSON.parse(localStorage.getItem(SAVED_WINDOWS_KEY)) || [];
+    } catch {}
+    if (!Array.isArray(saved) || !saved.length) {
+        return;
+    }
+    // Close all current windows first
+    Object.keys(openGameWindows).forEach(closeGameWindow);
+    // Open each saved window
+    saved.forEach(winState => {
+        const game = gameDatabase.find(g => g.id === winState.id);
+        if (!game) return;
+        const tLang = currentLang;
+        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
+        const passSettings = Array.isArray(game.passSettings)
+            ? game.passSettings
+            : ["lang", "theme"];
+        const params = [];
+        if (passSettings.includes("lang")) {
+            params.push("lang=" + encodeURIComponent(currentLang));
+        }
+        if (passSettings.includes("theme")) {
+            const theme = getThemeFromURLorStorage();
+            params.push("theme=" + encodeURIComponent(theme));
+        }
+        let url = game.url;
+        if (params.length > 0) {
+            url += (url.includes("?") ? "&" : "?") + params.join("&");
+        }
+        createGameWindow({
+            id: winState.id,
+            title: name,
+            url,
+            game
+        });
+        const entry = openGameWindows[winState.id];
+        if (entry && entry.win) {
+            if (!winState.maximized) {
+                entry.win.style.left = winState.left;
+                entry.win.style.top = winState.top;
+                entry.win.style.width = winState.width;
+                entry.win.style.height = winState.height;
+                entry.maximized = false;
+                entry.win.classList.remove('maximized');
+            } else {
+                if (!entry.maximized) toggleMaximizeGameWindow(entry.win, winState.id);
+            }
+        }
+    });
+}
+
+function getAutoSaveWindowsSetting() {
+    const val = localStorage.getItem(AUTO_SAVE_WINDOWS_KEY);
+    if (val === null) return true;
+    return val === "true";
+}
+
+function setAutoSaveWindowsSetting(val) {
+    localStorage.setItem(AUTO_SAVE_WINDOWS_KEY, val ? "true" : "false");
+}
+
+// --- Patch updateUIText to update auto-save label ---
+function updateUIText() {
+    const t = translations[currentLang];
+    document.getElementById('title').textContent = t.title;
+    document.getElementById('title_banner').textContent = t.title_banner;
+    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+    document.getElementById('searchBtn').textContent = t.search;
+    document.getElementById('resetBtn').textContent = t.reset;
+    document.getElementById('importBtn').textContent = t.importData;
+    document.getElementById('exportBtn').textContent = t.exportData;
+    // Timer controls
+    updateTimerUIText();
+    // Update theme selector to reflect new language
+    updateThemeSelector();
+    // Update pagination and recommendations via rerender
+
+    // Add/update auto-save label
+    const autoSaveLabel = document.getElementById('autoSaveWindowsLabel');
+    if (autoSaveLabel) {
+        autoSaveLabel.childNodes[1].nodeValue = (t.saveWindows || "Save Windows");
+    }
+}
+
+// --- Patch init to add auto-save checkbox and restore windows on load ---
+function init() {
+    // Add language selector to controls
+    const controls = document.querySelector('.controls');
+    if (!document.getElementById('langSelector')) {
+        controls.appendChild(createLanguageSelector());
+    }
+    // Add theme selector to controls
+    if (!document.getElementById('themeSelector')) {
+        controls.appendChild(createThemeSelector());
+    }
+    // Remove save/restore buttons if present (if any)
+    const saveBtn = document.getElementById('saveWindowsBtn');
+    if (saveBtn) saveBtn.remove();
+    const restoreBtn = document.getElementById('restoreWindowsBtn');
+    if (restoreBtn) restoreBtn.remove();
+    // Add auto-save checkbox if not present
+    if (!document.getElementById('autoSaveWindowsCheckbox')) {
+        const label = document.createElement('label');
+        label.id = 'autoSaveWindowsLabel';
+        label.className = 'window-state-label';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'autoSaveWindowsCheckbox';
+        checkbox.checked = getAutoSaveWindowsSetting();
+        checkbox.onchange = function() {
+            setAutoSaveWindowsSetting(checkbox.checked);
+            if (checkbox.checked) saveOpenGameWindows();
+        };
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' ' + (translations[currentLang].saveWindows || "Save Windows")));
+        controls.appendChild(label);
+    }
+    // Set theme preference if not set
+    let theme = getThemeFromURLorStorage();
+    saveThemePreference(theme);
+    setTheme(theme);
+    renderTagCloud();
+    displayGames(gameDatabase);
+    renderPagination();
+    updateUIText();
+    renderNotices();
+    renderFavouritesSection();
+    renderRecentlyPlayedSection();
+    // Remove this line to prevent infinite recursion:
+    // setLanguage(currentLang); // Ensure language is set after UI is ready
+    updateTimerUIText();
+
+    // Restore windows on load if enabled
+    if (getAutoSaveWindowsSetting()) {
+        setTimeout(restoreOpenGameWindows, 0);
+    }
+}
+
+// --- Auto-save on window changes ---
+function autoSaveIfEnabled() {
+    if (getAutoSaveWindowsSetting()) saveOpenGameWindows();
+}
+
+// Patch create/close/maximize/restore to auto-save
+const _orig_createGameWindow = createGameWindow;
+createGameWindow = function(args) {
+    _orig_createGameWindow(args);
+    autoSaveIfEnabled();
+};
+const _orig_closeGameWindow = closeGameWindow;
+closeGameWindow = function(id) {
+    _orig_closeGameWindow(id);
+    autoSaveIfEnabled();
+};
+const _orig_toggleMaximizeGameWindow = toggleMaximizeGameWindow;
+toggleMaximizeGameWindow = function(win, id) {
+    _orig_toggleMaximizeGameWindow(win, id);
+    autoSaveIfEnabled();
+};

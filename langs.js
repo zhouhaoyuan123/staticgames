@@ -40,6 +40,7 @@ const translations = {
         timerEndedTitle: "Time's Up!",
         timerEndedMsg: "Your game time is over. Please take a break.",
         timerReturn: "Return",
+        saveWindows: "Auto-save Windows",
     },
     es: {
         title: "App & Game Platform",
@@ -80,6 +81,7 @@ const translations = {
         timerEndedTitle: "¡Se acabó el tiempo!",
         timerEndedMsg: "Tu tiempo de juego ha terminado. Por favor, toma un descanso.",
         timerReturn: "Regresar",
+        saveWindows: "Auto-guardar ventanas",
     },
     fr: {
         title: "App & Game Platform",
@@ -120,6 +122,7 @@ const translations = {
         timerEndedTitle: "Temps écoulé !",
         timerEndedMsg: "Votre temps de jeu est écoulé. Veuillez faire une pause.",
         timerReturn: "Retourner",
+        saveWindows: "Sauvegarde auto des fenêtres",
     },
     de: {
         title: "App & Game Platform",
@@ -160,6 +163,7 @@ const translations = {
         timerEndedTitle: "Zeit abgelaufen!",
         timerEndedMsg: "Ihre Spielzeit ist abgelaufen. Bitte machen Sie eine Pause.",
         timerReturn: "Zurückkehren",
+        saveWindows: "Fenster automatisch speichern",
     },
     zh: {
         title: "应用和游戏集",
@@ -200,5 +204,6 @@ const translations = {
         timerEndedTitle: "时间到！",
         timerEndedMsg: "您的游戏时间已结束，请休息一下。",
         timerReturn: "返回",
+        saveWindows: "自动保存窗口",
     }
 };
