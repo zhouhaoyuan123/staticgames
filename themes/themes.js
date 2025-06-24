@@ -2,7 +2,8 @@ window.themeConfig = {
     availableThemes: [
         { value: "default", label: "Default", js: null, tags: ["basic"] },
         { value: "dark", label: "Dark", js: "themes/dark.js", tags: ["dark"] },
-        { value: "light", label: "Light", js: null, tags: ["light"] }
+        { value: "light", label: "Light", js: null, tags: ["light"] },
+        { value: "rainbow", label: "Rainbow", js: "themes/rainbow.js", tags: ["dynamic"] }
         // Add more themes here as needed, e.g. { value: "mytheme", label: "My Theme", js: "themes/mytheme.js", tags: ["custom"] }
     ],
     defaultTheme: "default",
