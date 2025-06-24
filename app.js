@@ -48,7 +48,10 @@ function setLanguage(lang) {
         url.searchParams.delete('lang');
         window.history.replaceState({}, '', url.toString());
     }
-
+    const langSelector = document.getElementById('langSelector');
+    if(langSelector) {
+        langSelector.value = lang;
+    }
     updateUIText();
     renderTagCloud();
     applyFilters();
@@ -227,6 +230,11 @@ function setTheme(theme) {
     if (url.searchParams.has('theme')) {
         url.searchParams.delete('theme');
         window.history.replaceState({}, '', url.toString());
+    }
+    // Update theme selector to reflect new theme
+    const themeSelector = document.getElementById('themeSelector');
+    if (themeSelector) {
+        themeSelector.value = theme;
     }
 }
 
@@ -1008,6 +1016,8 @@ function exportUserData() {
                 maximized: !!entry.maximized
             };
         }).filter(Boolean),
+        currentTheme: getThemeFromURLorStorage(),
+        currentLang: currentLang,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
     const url = URL.createObjectURL(blob);
@@ -1060,6 +1070,9 @@ function importUserData(event) {
             else {
                 setAutoSaveWindowsSetting(0);
             }
+            //for theme and lang
+            if(data.currentLang) setLanguage(data.currentLang);
+            if(data.currentTheme) setTheme(data.currentTheme);
             renderFavouritesSection();
             renderRecentlyPlayedSection();
             applyFilters();
