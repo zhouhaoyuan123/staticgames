@@ -210,8 +210,9 @@ function setTheme(theme) {
     }
     // Remove any previous theme script
     if (window._themeScript) {
-        window._themeScript.remove();
+        document.head.removeChild(window._themeScript);
         window._themeScript = null;
+        window.location.reload();
     }
     if (themeObj && themeObj.js) {
         // Load JS file as a script element
