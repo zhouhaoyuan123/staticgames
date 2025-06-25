@@ -69,7 +69,13 @@
             <input type="text" id="searchInput" placeholder="Search games...">
             <button id="searchBtn" onclick="searchGames()">Search</button>
             <button id="resetBtn" onclick="resetFilters()">Reset</button>
-            <div id="tagCloud"></div>
+            <div class="tag-controls">
+                <div class="tag-search-container">
+                    <input type="text" id="tagSearchInput" placeholder="Search tags...">
+                    <button id="tagExpandBtn" onclick="toggleTagList()">Show All Tags</button>
+                </div>
+                <div id="tagCloud"></div>
+            </div>
             <!-- Language selector will be injected by JS -->
             <!-- Theme selector will be injected by JS -->
             <button id="exportBtn" onclick="exportUserData()">Export Data</button>

@@ -289,17 +289,51 @@ function getThemeFromURLorStorage() {
 //     updateTimerUIText();
 // }
 
+let tagSearchTerm = '';
+let tagListExpanded = false;
+
+function searchTags() {
+    tagSearchTerm = document.getElementById('tagSearchInput').value.toLowerCase();
+    renderTagCloud();
+}
+
+function toggleTagListExpand() {
+    tagListExpanded = !tagListExpanded;
+    renderTagCloud();
+    updateUIText(); // Update button text
+}
+
 function renderTagCloud() {
-    const t = translations[currentLang];
-    const allTags = [...new Set(gameDatabase.flatMap(g => g.tags))];
-    const container = document.getElementById('tagCloud');
-    container.innerHTML = allTags.map(tag => {
+    const tagCloud = document.getElementById('tagCloud');
+    const allTags = [...new Set(gameDatabase.flatMap(game => game.tags))];
+    const t = translations[currentLang] || translations.en;
+
+    // Filter tags based on search term
+    const filteredTags = allTags.filter(tag => {
+        const tagName = (t.tagNames && t.tagNames[tag]) || tag;
+        return tagName.toLowerCase().includes(tagSearchTerm);
+    });
+
+    // Sort tags to show active ones first
+    const sortedTags = filteredTags.sort((a, b) => {
+        const aActive = currentFilters.activeTags.includes(a);
+        const bActive = currentFilters.activeTags.includes(b);
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+        return 0;
+    });
+
+    tagCloud.innerHTML = sortedTags.map(tag => {
         const isActive = currentFilters.activeTags.includes(tag);
-        // Always use the tag key for filtering, but show translated label
-        const tagLabel = (t.tagNames && t.tagNames[tag]) || tag;
-        // Use data-tag for the original tag key
-        return `<span class="tag ${isActive ? 'active' : ''}" data-tag="${tag}" onclick="toggleTagFilter('${tag}')">${tagLabel}</span>`;
+        const tagName = (t.tagNames && t.tagNames[tag]) || tag;
+        return `<span class="tag ${isActive ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tagName}</span>`;
     }).join('');
+
+    // Apply collapsed state if not expanded
+    if (!tagListExpanded) {
+        tagCloud.classList.add('collapsed');
+        tagCloud.classList.remove('expanded');
+    }
 }
 
 function toggleTagFilter(tag) {
@@ -314,9 +348,12 @@ function toggleTagFilter(tag) {
 }
 
 function resetFilters() {
-    currentFilters = { searchTerm: '', activeTags: [] };
+    currentFilters.searchTerm = '';
+    currentFilters.activeTags = [];
+    tagSearchTerm = '';
+    currentPage = 1;
     document.getElementById('searchInput').value = '';
-    currentPage = 1; // Reset page on filter change
+    document.getElementById('tagSearchInput').value = '';
     applyFilters();
 }
 
@@ -599,7 +636,7 @@ function renderPagination(totalGames = gameDatabase.length) {
     gamesPerPage = getGamesPerPage(); // Update games per page based on current screen size
     const pageCount = Math.ceil(totalGames / gamesPerPage);
     let paginationHTML = '';
-    
+
     // Previous button
     paginationHTML += `
         <button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" 
@@ -608,7 +645,7 @@ function renderPagination(totalGames = gameDatabase.length) {
             ${t.previous}
         </button>
     `;
-    
+
     // Page input and total pages
     paginationHTML += `
         <div class="page-info">
@@ -623,7 +660,7 @@ function renderPagination(totalGames = gameDatabase.length) {
             ${t.of} ${pageCount}
         </div>
     `;
-    
+
     // Next button
     paginationHTML += `
         <button class="page-btn ${currentPage === pageCount ? 'disabled' : ''}" 
@@ -632,7 +669,7 @@ function renderPagination(totalGames = gameDatabase.length) {
             ${t.next}
         </button>
     `;
-    
+
     document.getElementById('pagination').innerHTML = paginationHTML;
 }
 
@@ -645,7 +682,7 @@ function changePage(page) {
         return matchesSearch && matchesTags;
     }).length;
     const pageCount = Math.ceil(totalGames / gamesPerPage);
-    
+
     if (page >= 1 && page <= pageCount) {
         currentPage = page;
         applyFilters();
@@ -1580,9 +1617,9 @@ function updateUIText() {
     const t = translations[currentLang];
     document.getElementById('title').textContent = t.title;
     document.getElementById('title_banner').textContent = t.title_banner;
-    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-    document.getElementById('searchBtn').textContent = t.search;
-    document.getElementById('resetBtn').textContent = t.reset;
+    document.getElementById('searchInput').placeholder = t.searchPlaceholder || 'Search games...';
+    document.getElementById('searchBtn').textContent = t.search || 'Search';
+    document.getElementById('resetBtn').textContent = t.reset || 'Reset';
     document.getElementById('importBtn').textContent = t.importData;
     document.getElementById('exportBtn').textContent = t.exportData;
     // Timer controls
@@ -1596,6 +1633,16 @@ function updateUIText() {
     if (autoSaveLabel) {
         autoSaveLabel.childNodes[1].nodeValue = (t.saveWindows || "Save Windows");
     }
+
+    document.getElementById('tagSearchInput').placeholder = t.searchTags || 'Search tags...';
+
+    const expandBtn = document.getElementById('tagExpandBtn');
+    if (tagListExpanded) {
+        expandBtn.textContent = t.showFewerTags || 'Show Fewer Tags';
+    } else {
+        expandBtn.textContent = t.showAllTags || 'Show All Tags';
+    }
+
     // Update sort controls
     const sortBySel = document.getElementById('sortBySelect');
     const sortDirSel = document.getElementById('sortDirSelect');
@@ -1619,6 +1666,22 @@ function init() {
     if (!document.getElementById('themeSelector')) {
         controls.appendChild(createThemeSelector());
     }
+
+    // Add tag search and expand elements
+    if (!document.getElementById('tagSearchInput')) {
+        const tagSearchInput = document.createElement('input');
+        tagSearchInput.type = 'text';
+        tagSearchInput.id = 'tagSearchInput';
+        tagSearchInput.placeholder = translations[currentLang].searchTags || 'Search tags...';
+        controls.appendChild(tagSearchInput);
+
+        const tagExpandBtn = document.createElement('button');
+        tagExpandBtn.id = 'tagExpandBtn';
+        tagExpandBtn.textContent = translations[currentLang].showAllTags || 'Show All Tags';
+        tagExpandBtn.onclick = toggleTagListExpand;
+        controls.appendChild(tagExpandBtn);
+    }
+
     // Add sort controls if not present
     if (!document.getElementById('sortBySelect')) {
         controls.appendChild(createSortControls());
@@ -1664,6 +1727,16 @@ function init() {
     if (getAutoSaveWindowsSetting()) {
         setTimeout(restoreOpenGameWindows, 0);
     }
+
+    document.getElementById('searchInput').addEventListener('input', debounce(function() {
+        currentFilters.searchTerm = this.value.toLowerCase();
+        currentPage = 1;
+        applyFilters();
+    }, 300));
+
+    document.getElementById('tagSearchInput').addEventListener('input', debounce(function() {
+        searchTags();
+    }, 300));
 }
 
 // --- Auto-save on window changes ---

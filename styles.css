@@ -50,12 +50,65 @@ body, html {
     min-width: 200px;
 }
 
+.tag-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.tag-search-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#tagSearchInput {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 14px;
+    min-height: 36px;
+    box-sizing: border-box;
+}
+
+#tagExpandBtn {
+    padding: 8px 16px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 36px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+#tagExpandBtn:hover {
+    background: #5a6268;
+}
+
 #tagCloud { 
     display: flex; 
     flex-wrap: wrap; 
     gap: 8px; 
     width: 100%;
-    margin-top: 10px;
+    max-height: 120px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+#tagCloud.expanded {
+    max-height: 1000px;
+}
+
+#tagCloud.collapsed {
+    max-height: 120px;
 }
 
 .tag { 
@@ -343,12 +396,65 @@ body, html {
     min-width: 200px;
 }
 
+.tag-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.tag-search-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#tagSearchInput {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 14px;
+    min-height: 36px;
+    box-sizing: border-box;
+}
+
+#tagExpandBtn {
+    padding: 8px 16px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 36px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+#tagExpandBtn:hover {
+    background: #5a6268;
+}
+
 #tagCloud { 
     display: flex; 
     flex-wrap: wrap; 
     gap: 8px; 
     width: 100%;
-    margin-top: 10px;
+    max-height: 120px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+#tagCloud.expanded {
+    max-height: 1000px;
+}
+
+#tagCloud.collapsed {
+    max-height: 120px;
 }
 
 .tag { 
@@ -1003,6 +1109,7 @@ body, html {
 }
 
 .favourites-list, .recent-list {
+```text
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
