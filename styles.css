@@ -63,6 +63,7 @@ body, html {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    position: relative;
 }
 
 #tagSearchInput {
@@ -109,6 +110,36 @@ body, html {
 
 #tagCloud.collapsed {
     max-height: 120px;
+}
+
+.tag-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 100px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.tag-suggestion {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.tag-suggestion:hover {
+    background: #f8f9fa;
+}
+
+.tag-suggestion:last-child {
+    border-bottom: none;
 }
 
 .tag { 
@@ -409,6 +440,7 @@ body, html {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    position: relative;
 }
 
 #tagSearchInput {
@@ -455,6 +487,36 @@ body, html {
 
 #tagCloud.collapsed {
     max-height: 120px;
+}
+
+.tag-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 100px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.tag-suggestion {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.tag-suggestion:hover {
+    background: #f8f9fa;
+}
+
+.tag-suggestion:last-child {
+    border-bottom: none;
 }
 
 .tag { 
@@ -1109,7 +1171,6 @@ body, html {
 }
 
 .favourites-list, .recent-list {
-```text
     display: flex;
     flex-wrap: wrap;
     gap: 10px;

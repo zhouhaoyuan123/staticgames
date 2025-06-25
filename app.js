@@ -1,3 +1,15 @@
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 function isTouchDevice() {
     return (('ontouchstart' in window) ||
     (navigator.maxTouchPoints > 0) ||
@@ -292,8 +304,69 @@ function getThemeFromURLorStorage() {
 let tagSearchTerm = '';
 let tagListExpanded = false;
 
+let tagSuggestions = [];
+
 function searchTags() {
     tagSearchTerm = document.getElementById('tagSearchInput').value.toLowerCase();
+    
+    if (tagSearchTerm.length > 0) {
+        showTagSuggestions();
+    } else {
+        hideTagSuggestions();
+    }
+    
+    renderTagCloud();
+}
+
+function showTagSuggestions() {
+    const allTags = [...new Set(gameDatabase.flatMap(game => game.tags))];
+    const t = translations[currentLang] || translations.en;
+    
+    // Find matching tags that aren't already selected
+    const matchingTags = allTags.filter(tag => {
+        const tagName = (t.tagNames && t.tagNames[tag]) || tag;
+        return tagName.toLowerCase().includes(tagSearchTerm) && 
+               !currentFilters.activeTags.includes(tag);
+    }).slice(0, 8); // Limit to 8 suggestions
+    
+    if (matchingTags.length === 0) {
+        hideTagSuggestions();
+        return;
+    }
+    
+    let suggestionsContainer = document.getElementById('tagSuggestions');
+    if (!suggestionsContainer) {
+        suggestionsContainer = document.createElement('div');
+        suggestionsContainer.id = 'tagSuggestions';
+        suggestionsContainer.className = 'tag-suggestions';
+        document.getElementById('tagSearchInput').parentNode.appendChild(suggestionsContainer);
+    }
+    
+    suggestionsContainer.innerHTML = matchingTags.map(tag => {
+        const tagName = (t.tagNames && t.tagNames[tag]) || tag;
+        return `<div class="tag-suggestion" onclick="addTagFromSuggestion('${tag}')">${tagName}</div>`;
+    }).join('');
+    
+    suggestionsContainer.style.display = 'block';
+}
+
+function hideTagSuggestions() {
+    const suggestionsContainer = document.getElementById('tagSuggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.style.display = 'none';
+    }
+}
+
+function addTagFromSuggestion(tag) {
+    currentFilters.activeTags.push(tag);
+    currentPage = 1;
+    
+    // Clear search input and hide suggestions
+    document.getElementById('tagSearchInput').value = '';
+    tagSearchTerm = '';
+    hideTagSuggestions();
+    
+    applyFilters();
     renderTagCloud();
 }
 
@@ -314,16 +387,32 @@ function renderTagCloud() {
         return tagName.toLowerCase().includes(tagSearchTerm);
     });
 
-    // Sort tags to show active ones first
+    // Sort tags to show active ones first, then alphabetically
     const sortedTags = filteredTags.sort((a, b) => {
         const aActive = currentFilters.activeTags.includes(a);
         const bActive = currentFilters.activeTags.includes(b);
         if (aActive && !bActive) return -1;
         if (!aActive && bActive) return 1;
-        return 0;
+        
+        // Within same active state, sort alphabetically
+        const aName = (t.tagNames && t.tagNames[a]) || a;
+        const bName = (t.tagNames && t.tagNames[b]) || b;
+        return aName.localeCompare(bName);
     });
 
-    tagCloud.innerHTML = sortedTags.map(tag => {
+    // Always show active tags, then show others based on expand state
+    const activeTags = sortedTags.filter(tag => currentFilters.activeTags.includes(tag));
+    const inactiveTags = sortedTags.filter(tag => !currentFilters.activeTags.includes(tag));
+    
+    let tagsToShow = activeTags;
+    if (tagListExpanded) {
+        tagsToShow = [...activeTags, ...inactiveTags];
+    } else {
+        // Show first 10 inactive tags when collapsed
+        tagsToShow = [...activeTags, ...inactiveTags.slice(0, 10)];
+    }
+
+    tagCloud.innerHTML = tagsToShow.map(tag => {
         const isActive = currentFilters.activeTags.includes(tag);
         const tagName = (t.tagNames && t.tagNames[tag]) || tag;
         return `<span class="tag ${isActive ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tagName}</span>`;
@@ -333,6 +422,9 @@ function renderTagCloud() {
     if (!tagListExpanded) {
         tagCloud.classList.add('collapsed');
         tagCloud.classList.remove('expanded');
+    } else {
+        tagCloud.classList.add('expanded');
+        tagCloud.classList.remove('collapsed');
     }
 }
 
@@ -1382,6 +1474,8 @@ window.exportUserData = exportUserData;
 window.importUserData = importUserData;
 window.removeFavourite = removeFavourite;
 window.removeRecentlyPlayed = removeRecentlyPlayed;
+window.addTagFromSuggestion = addTagFromSuggestion;
+window.toggleTagListExpand = toggleTagListExpand;
 
 window.onload = init;
 
@@ -1737,6 +1831,18 @@ function init() {
     document.getElementById('tagSearchInput').addEventListener('input', debounce(function() {
         searchTags();
     }, 300));
+
+    // Hide tag suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        const tagSearchInput = document.getElementById('tagSearchInput');
+        const suggestionsContainer = document.getElementById('tagSuggestions');
+        
+        if (tagSearchInput && suggestionsContainer && 
+            !tagSearchInput.contains(e.target) && 
+            !suggestionsContainer.contains(e.target)) {
+            hideTagSuggestions();
+        }
+    });
 }
 
 // --- Auto-save on window changes ---
