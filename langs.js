@@ -41,6 +41,10 @@ const translations = {
         timerEndedMsg: "Your game time is over. Please take a break.",
         timerReturn: "Return",
         saveWindows: "Auto-save Windows",
+        sortByName: "Name",
+        sortByUpdated: "Last Updated",
+        ascending: "Ascending",
+        descending: "Descending",
     },
     es: {
         title: "App & Game Platform",
@@ -82,6 +86,10 @@ const translations = {
         timerEndedMsg: "Tu tiempo de juego ha terminado. Por favor, toma un descanso.",
         timerReturn: "Regresar",
         saveWindows: "Auto-guardar ventanas",
+        sortByName: "Nombre",
+        sortByUpdated: "Última actualización",
+        ascending: "Ascendente",
+        descending: "Descendente",
     },
     fr: {
         title: "App & Game Platform",
@@ -123,6 +131,10 @@ const translations = {
         timerEndedMsg: "Votre temps de jeu est écoulé. Veuillez faire une pause.",
         timerReturn: "Retourner",
         saveWindows: "Sauvegarde auto des fenêtres",
+        sortByName: "Nom",
+        sortByUpdated: "Dernière mise à jour",
+        ascending: "Ascendant",
+        descending: "Descendant",
     },
     de: {
         title: "App & Game Platform",
@@ -164,6 +176,10 @@ const translations = {
         timerEndedMsg: "Ihre Spielzeit ist abgelaufen. Bitte machen Sie eine Pause.",
         timerReturn: "Zurückkehren",
         saveWindows: "Fenster automatisch speichern",
+        sortByName: "Name",
+        sortByUpdated: "Zuletzt aktualisiert",
+        ascending: "Aufsteigend",
+        descending: "Absteigend",
     },
     zh: {
         title: "应用和游戏集",
@@ -205,5 +221,9 @@ const translations = {
         timerEndedMsg: "您的游戏时间已结束，请休息一下。",
         timerReturn: "返回",
         saveWindows: "自动保存窗口",
+        sortByName: "名称",
+        sortByUpdated: "最后更新",
+        ascending: "升序",
+        descending: "降序",
     }
 };

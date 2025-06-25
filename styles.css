@@ -584,6 +584,20 @@ body, html {
     background: #0d47a1;
 }
 
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0 10px;
+}
+.sort-controls select {
+    font-size: 15px;
+    padding: 7px 12px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    min-height: 36px;
+}
+
 @media (max-width: 768px) {
     body, html {
         font-size: 18px;

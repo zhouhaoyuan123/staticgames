@@ -45,7 +45,8 @@ const gameDatabase = [
             fr: "Un jeu de fusée rapide. Évitez les obstacles et atteignez l'objectif !",
             de: "Ein rasantes Raketenspiel. Weiche Hindernissen aus und erreiche das Ziel!",
             zh: "快节奏的火箭飞行游戏。避开障碍物，冲向终点！"
-        }
+        },
+        lastUpdated: "20240608"
     },
     {
         id: 2,
@@ -77,9 +78,10 @@ const gameDatabase = [
             fr: "Attrapez autant de poissons que possible avant la fin du temps.",
             de: "Fange so viele Fische wie möglich, bevor die Zeit abläuft.",
             zh: "在时间结束前尽可能多地捕鱼。"
-        }
-    },
-    {
+        },
+        updated: 20240609
+        },
+        {
         id: 3,
         name: "Maze Game",
         name_i18n: {
@@ -109,9 +111,10 @@ const gameDatabase = [
             fr: "Naviguez dans le labyrinthe et trouvez la sortie.",
             de: "Finde den Ausgang im Labyrinth.",
             zh: "在迷宫中找到出口。"
-        }
-    },
-    {
+        },
+        updated: 20240609
+        },
+        {
         id: 4,
         name: "Usage",
         name_i18n: {
@@ -140,9 +143,10 @@ const gameDatabase = [
             fr: "Documentation et instructions d'utilisation de la plateforme.",
             de: "Dokumentation und Gebrauchsanweisung für die Plattform.",
             zh: "平台的文档和使用说明。"
-        }
-    },
-    {
+        },
+        updated: 20240609
+        },
+        {
         id: 5,
         name: "Mouse Trap Game",
         name_i18n: {
@@ -171,8 +175,9 @@ const gameDatabase = [
             fr: "Attrapez la souris avant qu'elle ne s'échappe !",
             de: "Fange die Maus, bevor sie entkommt!",
             zh: "在老鼠逃跑前把它困住！"
-        }
-    },
+        },
+        updated: 20240609
+        },
     // Add more games...
 ];
 

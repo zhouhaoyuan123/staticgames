@@ -15,7 +15,9 @@ let gamesPerPage = getGamesPerPage();
 let currentPage = 1;
 let currentFilters = {
     searchTerm: '',
-    activeTags: []
+    activeTags: [],
+    sortBy: 'name', // 'name' or 'updated'
+    sortDir: 'asc'  // 'asc' or 'desc'
 };
 
 function detectLanguage() {
@@ -81,21 +83,31 @@ function updateOpenGameWindowTitles() {
     });
 }
 
-function updateUIText() {
-    const t = translations[currentLang];
-    document.getElementById('title').textContent = t.title;
-    document.getElementById('title_banner').textContent = t.title_banner;
-    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-    document.getElementById('searchBtn').textContent = t.search;
-    document.getElementById('resetBtn').textContent = t.reset;
-    document.getElementById('importBtn').textContent = t.importData;
-    document.getElementById('exportBtn').textContent = t.exportData;
-    // Timer controls
-    updateTimerUIText();
-    // Update theme selector to reflect new language
-    updateThemeSelector();
-    // Update pagination and recommendations via rerender
-}
+// function updateUIText() {
+//     const t = translations[currentLang];
+//     document.getElementById('title').textContent = t.title;
+//     document.getElementById('title_banner').textContent = t.title_banner;
+//     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+//     document.getElementById('searchBtn').textContent = t.search;
+//     document.getElementById('resetBtn').textContent = t.reset;
+//     document.getElementById('importBtn').textContent = t.importData;
+//     document.getElementById('exportBtn').textContent = t.exportData;
+//     // Timer controls
+//     updateTimerUIText();
+//     // Update theme selector to reflect new language
+//     updateThemeSelector();
+//     // Update pagination and recommendations via rerender
+
+//     // Update sort controls
+//     const sortBySel = document.getElementById('sortBySelect');
+//     const sortDirSel = document.getElementById('sortDirSelect');
+//     if (sortBySel && sortDirSel) {
+//         sortBySel.options[0].textContent = t.sortByName || 'Name';
+//         sortBySel.options[1].textContent = t.sortByUpdated || 'Last Updated';
+//         sortDirSel.options[0].textContent = t.ascending || 'Ascending';
+//         sortDirSel.options[1].textContent = t.descending || 'Descending';
+//     }
+// }
 
 function updateThemeSelector() {
     const oldSel = document.getElementById('themeSelector');
@@ -247,31 +259,35 @@ function getThemeFromURLorStorage() {
 }
 
 // --- Patch init to add language and theme selector and load preferences ---
-function init() {
-    // Add language selector to controls
-    const controls = document.querySelector('.controls');
-    if (!document.getElementById('langSelector')) {
-        controls.appendChild(createLanguageSelector());
-    }
-    // Add theme selector to controls
-    if (!document.getElementById('themeSelector')) {
-        controls.appendChild(createThemeSelector());
-    }
-    // Set theme preference if not set
-    let theme = getThemeFromURLorStorage();
-    saveThemePreference(theme);
-    setTheme(theme);
-    renderTagCloud();
-    displayGames(gameDatabase);
-    renderPagination();
-    updateUIText();
-    renderNotices();
-    renderFavouritesSection();
-    renderRecentlyPlayedSection();
-    // Remove this line to prevent infinite recursion:
-    // setLanguage(currentLang); // Ensure language is set after UI is ready
-    updateTimerUIText();
-}
+// function init() {
+//     // Add language selector to controls
+//     const controls = document.querySelector('.controls');
+//     if (!document.getElementById('langSelector')) {
+//         controls.appendChild(createLanguageSelector());
+//     }
+//     // Add theme selector to controls
+//     if (!document.getElementById('themeSelector')) {
+//         controls.appendChild(createThemeSelector());
+//     }
+//     // Add sort controls if not present
+//     if (!document.getElementById('sortBySelect')) {
+//         controls.appendChild(createSortControls());
+//     }
+//     // Set theme preference if not set
+//     let theme = getThemeFromURLorStorage();
+//     saveThemePreference(theme);
+//     setTheme(theme);
+//     renderTagCloud();
+//     displayGames(gameDatabase);
+//     renderPagination();
+//     updateUIText();
+//     renderNotices();
+//     renderFavouritesSection();
+//     renderRecentlyPlayedSection();
+//     // Remove this line to prevent infinite recursion:
+//     // setLanguage(currentLang); // Ensure language is set after UI is ready
+//     updateTimerUIText();
+// }
 
 function renderTagCloud() {
     const t = translations[currentLang];
@@ -308,6 +324,52 @@ function searchGames() {
     currentFilters.searchTerm = document.getElementById('searchInput').value.toLowerCase();
     currentPage = 1; // Reset page on filter change
     applyFilters();
+}
+
+function createSortControls() {
+    const t = translations[currentLang];
+    const container = document.createElement('div');
+    container.className = 'sort-controls';
+
+    // Sort by select
+    const sortBySel = document.createElement('select');
+    sortBySel.id = 'sortBySelect';
+    [
+        { value: 'name', label: t.sortByName || 'Name' },
+        { value: 'updated', label: t.sortByUpdated || 'Last Updated' }
+    ].forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.label;
+        if (currentFilters.sortBy === opt.value) o.selected = true;
+        sortBySel.appendChild(o);
+    });
+    sortBySel.onchange = () => {
+        currentFilters.sortBy = sortBySel.value;
+        applyFilters();
+    };
+
+    // Sort direction select
+    const sortDirSel = document.createElement('select');
+    sortDirSel.id = 'sortDirSelect';
+    [
+        { value: 'asc', label: t.ascending || 'Ascending' },
+        { value: 'desc', label: t.descending || 'Descending' }
+    ].forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.label;
+        if (currentFilters.sortDir === opt.value) o.selected = true;
+        sortDirSel.appendChild(o);
+    });
+    sortDirSel.onchange = () => {
+        currentFilters.sortDir = sortDirSel.value;
+        applyFilters();
+    };
+
+    container.appendChild(sortBySel);
+    container.appendChild(sortDirSel);
+    return container;
 }
 
 // --- Parallelize heavy operations using Web Workers if available ---
@@ -355,14 +417,13 @@ function applyFilters() {
     const tLang = currentLang;
     // Move filtering to a worker if possible
     runInWorker(function({gameDatabase, currentFilters, tLang, favIds}) {
-        // Filtering logic (copied from previous applyFilters)
         function getName(game) {
             return (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
         }
         function getAuthor(game) {
             return (game.author_i18n && game.author_i18n[tLang]) || game.author || "";
         }
-        const filtered = gameDatabase.filter(game => {
+        let filtered = gameDatabase.filter(game => {
             const name = getName(game);
             const author = getAuthor(game);
             const matchesSearch =
@@ -373,6 +434,22 @@ function applyFilters() {
                 currentFilters.activeTags.every(tag => game.tags.includes(tag));
             return matchesSearch && matchesTags;
         });
+        // Sorting
+        if (currentFilters.sortBy === 'updated') {
+            filtered.sort((a, b) => {
+                const aVal = a.updated ? a.updated : 0;
+                const bVal = b.updated ? b.updated : 0;
+                return currentFilters.sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+        } else {
+            filtered.sort((a, b) => {
+                const aVal = getName(a).toLowerCase();
+                const bVal = getName(b).toLowerCase();
+                if (aVal < bVal) return currentFilters.sortDir === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentFilters.sortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
         // Move favourites to the front, preserving order and avoiding duplicates
         const favGames = favIds.map(id => filtered.find(g => g.id === id)).filter(Boolean);
         const nonFavGames = filtered.filter(g => !favIds.includes(g.id));
@@ -399,6 +476,22 @@ function applyFilters() {
                 currentFilters.activeTags.every(tag => game.tags.includes(tag));
             return matchesSearch && matchesTags;
         });
+        // Sorting
+        if (currentFilters.sortBy === 'updated') {
+            results.sort((a, b) => {
+                const aVal = a.updated || 0;
+                const bVal = b.updated || 0;
+                return currentFilters.sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+        } else {
+            results.sort((a, b) => {
+                const aVal = ((a.name_i18n && a.name_i18n[tLang]) || a.name || "").toLowerCase();
+                const bVal = ((b.name_i18n && b.name_i18n[tLang]) || b.name || "").toLowerCase();
+                if (aVal < bVal) return currentFilters.sortDir === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentFilters.sortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
         // Move favourites to the front, preserving order and avoiding duplicates
         const favIds = getFavourites();
         const favGames = favIds.map(id => results.find(g => g.id === id)).filter(Boolean);
@@ -1181,47 +1274,61 @@ function hideTimerEndOverlay() {
 }
 
 // --- Patch updateUIText to update timer controls ---
-function updateUIText() {
-    const t = translations[currentLang];
-    document.getElementById('title').textContent = t.title;
-    document.getElementById('title_banner').textContent = t.title_banner;
-    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-    document.getElementById('searchBtn').textContent = t.search;
-    document.getElementById('resetBtn').textContent = t.reset;
-    document.getElementById('importBtn').textContent = t.importData;
-    document.getElementById('exportBtn').textContent = t.exportData;
-    // Timer controls
-    updateTimerUIText();
-    // Update theme selector to reflect new language
-    updateThemeSelector();
-    // Update pagination and recommendations via rerender
-}
+// function updateUIText() {
+//     const t = translations[currentLang];
+//     document.getElementById('title').textContent = t.title;
+//     document.getElementById('title_banner').textContent = t.title_banner;
+//     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+//     document.getElementById('searchBtn').textContent = t.search;
+//     document.getElementById('resetBtn').textContent = t.reset;
+//     document.getElementById('importBtn').textContent = t.importData;
+//     document.getElementById('exportBtn').textContent = t.exportData;
+//     // Timer controls
+//     updateTimerUIText();
+//     // Update theme selector to reflect new language
+//     updateThemeSelector();
+//     // Update pagination and recommendations via rerender
 
-// --- Patch init to update timer controls on load ---
-function init() {
-    // Add language selector to controls
-    const controls = document.querySelector('.controls');
-    if (!document.getElementById('langSelector')) {
-        controls.appendChild(createLanguageSelector());
-    }
-    // Add theme selector to controls
-    if (!document.getElementById('themeSelector')) {
-        controls.appendChild(createThemeSelector());
-    }
-    // Set theme preference if not set
-    let theme = getThemeFromURLorStorage();
-    saveThemePreference(theme);
-    setTheme(theme);
-    renderTagCloud();
-    displayGames(gameDatabase);
-    renderPagination();
-    updateUIText();
-    renderNotices();
-    renderFavouritesSection();
-    renderRecentlyPlayedSection();
-    setLanguage(currentLang); // Ensure language is set after UI is ready
-    updateTimerUIText();
-}
+//     // Update sort controls
+//     const sortBySel = document.getElementById('sortBySelect');
+//     const sortDirSel = document.getElementById('sortDirSelect');
+//     if (sortBySel && sortDirSel) {
+//         sortBySel.options[0].textContent = t.sortByName || 'Name';
+//         sortBySel.options[1].textContent = t.sortByUpdated || 'Last Updated';
+//         sortDirSel.options[0].textContent = t.ascending || 'Ascending';
+//         sortDirSel.options[1].textContent = t.descending || 'Descending';
+//     }
+// }
+
+// // --- Patch init to update timer controls on load ---
+// function init() {
+//     // Add language selector to controls
+//     const controls = document.querySelector('.controls');
+//     if (!document.getElementById('langSelector')) {
+//         controls.appendChild(createLanguageSelector());
+//     }
+//     // Add theme selector to controls
+//     if (!document.getElementById('themeSelector')) {
+//         controls.appendChild(createThemeSelector());
+//     }
+//     // Add sort controls if not present
+//     if (!document.getElementById('sortBySelect')) {
+//         controls.appendChild(createSortControls());
+//     }
+//     // Set theme preference if not set
+//     let theme = getThemeFromURLorStorage();
+//     saveThemePreference(theme);
+//     setTheme(theme);
+//     renderTagCloud();
+//     displayGames(gameDatabase);
+//     renderPagination();
+//     updateUIText();
+//     renderNotices();
+//     renderFavouritesSection();
+//     renderRecentlyPlayedSection();
+//     setLanguage(currentLang); // Ensure language is set after UI is ready
+//     updateTimerUIText();
+// }
 
 // --- Expose timer functions for HTML ---
 window.startGameTimer = startGameTimer;
@@ -1489,7 +1596,17 @@ function updateUIText() {
     if (autoSaveLabel) {
         autoSaveLabel.childNodes[1].nodeValue = (t.saveWindows || "Save Windows");
     }
+    // Update sort controls
+    const sortBySel = document.getElementById('sortBySelect');
+    const sortDirSel = document.getElementById('sortDirSelect');
+    if (sortBySel && sortDirSel) {
+        sortBySel.options[0].textContent = t.sortByName || 'Name';
+        sortBySel.options[1].textContent = t.sortByUpdated || 'Last Updated';
+        sortDirSel.options[0].textContent = t.ascending || 'Ascending';
+        sortDirSel.options[1].textContent = t.descending || 'Descending';
+    }
 }
+
 
 // --- Patch init to add auto-save checkbox and restore windows on load ---
 function init() {
@@ -1501,6 +1618,10 @@ function init() {
     // Add theme selector to controls
     if (!document.getElementById('themeSelector')) {
         controls.appendChild(createThemeSelector());
+    }
+    // Add sort controls if not present
+    if (!document.getElementById('sortBySelect')) {
+        controls.appendChild(createSortControls());
     }
     // Remove save/restore buttons if present (if any)
     const saveBtn = document.getElementById('saveWindowsBtn');
