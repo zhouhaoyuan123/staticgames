@@ -437,8 +437,8 @@ function applyFilters() {
         // Sorting
         if (currentFilters.sortBy === 'updated') {
             filtered.sort((a, b) => {
-                const aVal = a.updated ? a.updated : 0;
-                const bVal = b.updated ? b.updated : 0;
+                const aVal = a.updated || a.lastUpdated || 0;
+                const bVal = b.updated || b.lastUpdated || 0;
                 return currentFilters.sortDir === 'asc' ? aVal - bVal : bVal - aVal;
             });
         } else {
@@ -479,8 +479,8 @@ function applyFilters() {
         // Sorting
         if (currentFilters.sortBy === 'updated') {
             results.sort((a, b) => {
-                const aVal = a.updated || 0;
-                const bVal = b.updated || 0;
+                const aVal = a.updated || a.lastUpdated || 0;
+                const bVal = b.updated || b.lastUpdated || 0;
                 return currentFilters.sortDir === 'asc' ? aVal - bVal : bVal - aVal;
             });
         } else {

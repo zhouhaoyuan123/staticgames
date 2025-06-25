@@ -46,7 +46,7 @@ const gameDatabase = [
             de: "Ein rasantes Raketenspiel. Weiche Hindernissen aus und erreiche das Ziel!",
             zh: "快节奏的火箭飞行游戏。避开障碍物，冲向终点！"
         },
-        lastUpdated: "20240608"
+        updated: 20240608
     },
     {
         id: 2,
