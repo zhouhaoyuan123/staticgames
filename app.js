@@ -95,31 +95,6 @@ function updateOpenGameWindowTitles() {
     });
 }
 
-// function updateUIText() {
-//     const t = translations[currentLang];
-//     document.getElementById('title').textContent = t.title;
-//     document.getElementById('title_banner').textContent = t.title_banner;
-//     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-//     document.getElementById('searchBtn').textContent = t.search;
-//     document.getElementById('resetBtn').textContent = t.reset;
-//     document.getElementById('importBtn').textContent = t.importData;
-//     document.getElementById('exportBtn').textContent = t.exportData;
-//     // Timer controls
-//     updateTimerUIText();
-//     // Update theme selector to reflect new language
-//     updateThemeSelector();
-//     // Update pagination and recommendations via rerender
-
-//     // Update sort controls
-//     const sortBySel = document.getElementById('sortBySelect');
-//     const sortDirSel = document.getElementById('sortDirSelect');
-//     if (sortBySel && sortDirSel) {
-//         sortBySel.options[0].textContent = t.sortByName || 'Name';
-//         sortBySel.options[1].textContent = t.sortByUpdated || 'Last Updated';
-//         sortDirSel.options[0].textContent = t.ascending || 'Ascending';
-//         sortDirSel.options[1].textContent = t.descending || 'Descending';
-//     }
-// }
 
 function updateThemeSelector() {
     const oldSel = document.getElementById('themeSelector');
@@ -270,36 +245,6 @@ function getThemeFromURLorStorage() {
     return theme || 'default';
 }
 
-// --- Patch init to add language and theme selector and load preferences ---
-// function init() {
-//     // Add language selector to controls
-//     const controls = document.querySelector('.controls');
-//     if (!document.getElementById('langSelector')) {
-//         controls.appendChild(createLanguageSelector());
-//     }
-//     // Add theme selector to controls
-//     if (!document.getElementById('themeSelector')) {
-//         controls.appendChild(createThemeSelector());
-//     }
-//     // Add sort controls if not present
-//     if (!document.getElementById('sortBySelect')) {
-//         controls.appendChild(createSortControls());
-//     }
-//     // Set theme preference if not set
-//     let theme = getThemeFromURLorStorage();
-//     saveThemePreference(theme);
-//     setTheme(theme);
-//     renderTagCloud();
-//     displayGames(gameDatabase);
-//     renderPagination();
-//     updateUIText();
-//     renderNotices();
-//     renderFavouritesSection();
-//     renderRecentlyPlayedSection();
-//     // Remove this line to prevent infinite recursion:
-//     // setLanguage(currentLang); // Ensure language is set after UI is ready
-//     updateTimerUIText();
-// }
 
 let tagSearchTerm = '';
 let tagListExpanded = false;
@@ -1402,62 +1347,6 @@ function hideTimerEndOverlay() {
     stopGameTimer();
 }
 
-// --- Patch updateUIText to update timer controls ---
-// function updateUIText() {
-//     const t = translations[currentLang];
-//     document.getElementById('title').textContent = t.title;
-//     document.getElementById('title_banner').textContent = t.title_banner;
-//     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-//     document.getElementById('searchBtn').textContent = t.search;
-//     document.getElementById('resetBtn').textContent = t.reset;
-//     document.getElementById('importBtn').textContent = t.importData;
-//     document.getElementById('exportBtn').textContent = t.exportData;
-//     // Timer controls
-//     updateTimerUIText();
-//     // Update theme selector to reflect new language
-//     updateThemeSelector();
-//     // Update pagination and recommendations via rerender
-
-//     // Update sort controls
-//     const sortBySel = document.getElementById('sortBySelect');
-//     const sortDirSel = document.getElementById('sortDirSelect');
-//     if (sortBySel && sortDirSel) {
-//         sortBySel.options[0].textContent = t.sortByName || 'Name';
-//         sortBySel.options[1].textContent = t.sortByUpdated || 'Last Updated';
-//         sortDirSel.options[0].textContent = t.ascending || 'Ascending';
-//         sortDirSel.options[1].textContent = t.descending || 'Descending';
-//     }
-// }
-
-// // --- Patch init to update timer controls on load ---
-// function init() {
-//     // Add language selector to controls
-//     const controls = document.querySelector('.controls');
-//     if (!document.getElementById('langSelector')) {
-//         controls.appendChild(createLanguageSelector());
-//     }
-//     // Add theme selector to controls
-//     if (!document.getElementById('themeSelector')) {
-//         controls.appendChild(createThemeSelector());
-//     }
-//     // Add sort controls if not present
-//     if (!document.getElementById('sortBySelect')) {
-//         controls.appendChild(createSortControls());
-//     }
-//     // Set theme preference if not set
-//     let theme = getThemeFromURLorStorage();
-//     saveThemePreference(theme);
-//     setTheme(theme);
-//     renderTagCloud();
-//     displayGames(gameDatabase);
-//     renderPagination();
-//     updateUIText();
-//     renderNotices();
-//     renderFavouritesSection();
-//     renderRecentlyPlayedSection();
-//     setLanguage(currentLang); // Ensure language is set after UI is ready
-//     updateTimerUIText();
-// }
 
 // --- Expose timer functions for HTML ---
 window.startGameTimer = startGameTimer;
