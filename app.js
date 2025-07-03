@@ -1756,6 +1756,10 @@ function init() {
             hideTagSuggestions();
         }
     });
+    renderPlayTimeAnalyticsToggle();
+    updatePlayTimeAnalyticsUI();
+    // Start site timer if enabled
+    if (playTimeAnalyticsEnabled) startSiteTimer();
 }
 
 // --- Auto-save on window changes ---
@@ -1779,3 +1783,276 @@ toggleMaximizeGameWindow = function (win, id) {
     _orig_toggleMaximizeGameWindow(win, id);
     autoSaveIfEnabled();
 };
+
+// --- Play Time Analytics ---
+// Storage keys
+const PLAYTIME_ANALYTICS_KEY = "playTimeAnalytics";
+const PLAYTIME_ENABLED_KEY = "playTimeAnalyticsEnabled";
+const TOTAL_SITE_TIME_KEY = "totalSiteTime";
+let playTimeAnalyticsEnabled = getPlayTimeAnalyticsEnabled();
+let siteTimeStart = Date.now();
+let siteTimeAccum = getTotalSiteTime();
+let perGamePlayStart = {}; // {gameId: startTimestamp}
+let perGamePlayAccum = getPlayTimeAnalytics(); // {gameId: ms}
+
+// --- Translations patch ---
+Object.keys(translations).forEach(lang => {
+    translations[lang].playTimeAnalytics = translations[lang].playTimeAnalytics || {};
+    Object.assign(translations[lang].playTimeAnalytics, {
+        enable: {
+            en: "Enable Play Time Analytics",
+            es: "Activar análisis de tiempo de juego",
+            fr: "Activer l'analyse du temps de jeu",
+            de: "Spielzeit-Analyse aktivieren",
+            zh: "启用游戏时间分析"
+        }[lang] || "Enable Play Time Analytics",
+        totalSite: {
+            en: "Total Site Time",
+            es: "Tiempo total en el sitio",
+            fr: "Temps total sur le site",
+            de: "Gesamte Seitenzeit",
+            zh: "站点总时长"
+        }[lang] || "Total Site Time",
+        perGame: {
+            en: "Per Game/App Time",
+            es: "Tiempo por juego/app",
+            fr: "Temps par jeu/app",
+            de: "Zeit pro Spiel/App",
+            zh: "每个游戏/应用时长"
+        }[lang] || "Per Game/App Time",
+        show: {
+            en: "Show Analytics",
+            es: "Mostrar análisis",
+            fr: "Afficher l'analyse",
+            de: "Analyse anzeigen",
+            zh: "显示分析"
+        }[lang] || "Show Analytics",
+        hide: {
+            en: "Hide Analytics",
+            es: "Ocultar análisis",
+            fr: "Masquer l'analyse",
+            de: "Analyse ausblenden",
+            zh: "隐藏分析"
+        }[lang] || "Hide Analytics",
+        reset: {
+            en: "Reset Analytics",
+            es: "Restablecer análisis",
+            fr: "Réinitialiser l'analyse",
+            de: "Analyse zurücksetzen",
+            zh: "重置分析"
+        }[lang] || "Reset Analytics",
+        none: {
+            en: "No data yet.",
+            es: "Sin datos aún.",
+            fr: "Pas encore de données.",
+            de: "Noch keine Daten.",
+            zh: "暂无数据。"
+        }[lang] || "No data yet."
+    });
+});
+
+// --- Play Time Analytics Storage ---
+function getPlayTimeAnalyticsEnabled() {
+    const val = localStorage.getItem(PLAYTIME_ENABLED_KEY);
+    return val === null ? false : val === "true";
+}
+function setPlayTimeAnalyticsEnabled(val) {
+    playTimeAnalyticsEnabled = !!val;
+    localStorage.setItem(PLAYTIME_ENABLED_KEY, playTimeAnalyticsEnabled ? "true" : "false");
+}
+function getPlayTimeAnalytics() {
+    try {
+        return JSON.parse(localStorage.getItem(PLAYTIME_ANALYTICS_KEY)) || {};
+    } catch { return {}; }
+}
+function setPlayTimeAnalytics(data) {
+    localStorage.setItem(PLAYTIME_ANALYTICS_KEY, JSON.stringify(data));
+}
+function getTotalSiteTime() {
+    return parseInt(localStorage.getItem(TOTAL_SITE_TIME_KEY), 10) || 0;
+}
+function setTotalSiteTime(ms) {
+    localStorage.setItem(TOTAL_SITE_TIME_KEY, String(ms));
+}
+
+// --- Play Time Analytics Logic ---
+function startSiteTimer() {
+    siteTimeStart = Date.now();
+}
+function stopSiteTimer() {
+    if (!playTimeAnalyticsEnabled) return;
+    const now = Date.now();
+    siteTimeAccum += now - siteTimeStart;
+    setTotalSiteTime(siteTimeAccum);
+    siteTimeStart = now;
+}
+function resetPlayTimeAnalytics() {
+    localStorage.removeItem(PLAYTIME_ANALYTICS_KEY);
+    localStorage.removeItem(TOTAL_SITE_TIME_KEY);
+    perGamePlayAccum = {};
+    siteTimeAccum = 0;
+    updatePlayTimeAnalyticsUI();
+}
+
+function startGamePlayTimer(gameId) {
+    if (!playTimeAnalyticsEnabled) return;
+    perGamePlayStart[gameId] = Date.now();
+}
+function stopGamePlayTimer(gameId) {
+    if (!playTimeAnalyticsEnabled) return;
+    if (!perGamePlayStart[gameId]) return;
+    const now = Date.now();
+    const elapsed = now - perGamePlayStart[gameId];
+    perGamePlayAccum[gameId] = (perGamePlayAccum[gameId] || 0) + elapsed;
+    setPlayTimeAnalytics(perGamePlayAccum);
+    delete perGamePlayStart[gameId];
+    updatePlayTimeAnalyticsUI();
+}
+function formatDuration(ms) {
+    if (!ms || ms < 1000) return "0:00";
+    const sec = Math.floor(ms / 1000);
+    const min = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (min < 60) return `${min}:${s.toString().padStart(2, "0")}`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+// --- Patch create/closeGameWindow to track play time ---
+const _orig_createGameWindow2 = createGameWindow;
+createGameWindow = function (args) {
+    _orig_createGameWindow2(args);
+    if (playTimeAnalyticsEnabled && args && args.id !== undefined) {
+        startGamePlayTimer(args.id);
+    }
+    autoSaveIfEnabled && autoSaveIfEnabled();
+};
+const _orig_closeGameWindow2 = closeGameWindow;
+closeGameWindow = function (id) {
+    if (playTimeAnalyticsEnabled && id !== undefined) {
+        stopGamePlayTimer(id);
+    }
+    _orig_closeGameWindow2(id);
+    autoSaveIfEnabled && autoSaveIfEnabled();
+};
+
+// --- Patch toggleMaximizeGameWindow to not affect play time analytics ---
+// ...existing code...
+
+// --- Play Time Analytics UI ---
+function updatePlayTimeAnalyticsUI() {
+    const t = translations[currentLang].playTimeAnalytics;
+    const analyticsDiv = document.getElementById('playTimeAnalyticsPane');
+    if (!analyticsDiv) return;
+    if (!playTimeAnalyticsEnabled) {
+        analyticsDiv.innerHTML = '';
+        return;
+    }
+    // Total site time
+    let total = siteTimeAccum;
+    if (siteTimeStart) total += Date.now() - siteTimeStart;
+    // Per-game times
+    const data = getPlayTimeAnalytics();
+    const games = Object.keys(data)
+        .map(id => {
+            const game = gameDatabase.find(g => g.id == id);
+            const name = (game && ((game.name_i18n && game.name_i18n[currentLang]) || game.name)) || `Game ${id}`;
+            return { id, name, ms: data[id] };
+        })
+        .filter(g => g.ms > 0)
+        .sort((a, b) => b.ms - a.ms);
+    analyticsDiv.innerHTML = `
+        <div class="pta-total">${t.totalSite || "Total Site Time"}: <b>${formatDuration(total)}</b></div>
+        <div class="pta-pergame-title">${t.perGame || "Per Game/App Time"}:</div>
+        <div class="pta-pergame-list">
+            ${games.length ? games.map(g => `<div class="pta-game"><span class="pta-gamename">${g.name}</span><span class="pta-gametime">${formatDuration(g.ms)}</span></div>`).join('') : `<div class="pta-nodata">${t.none}</div>`}
+        </div>
+        <button class="pta-reset-btn" onclick="resetPlayTimeAnalytics()">${t.reset}</button>
+    `;
+}
+
+// --- Play Time Analytics Toggle ---
+function renderPlayTimeAnalyticsToggle() {
+    const controls = document.querySelector('.controls');
+    if (!controls || document.getElementById('playTimeAnalyticsToggle')) return;
+    const t = translations[currentLang].playTimeAnalytics;
+    const label = document.createElement('label');
+    label.id = 'playTimeAnalyticsToggle';
+    label.className = 'pta-toggle-label';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = playTimeAnalyticsEnabled;
+    checkbox.onchange = function () {
+        setPlayTimeAnalyticsEnabled(checkbox.checked);
+        if (checkbox.checked) {
+            startSiteTimer();
+        } else {
+            stopSiteTimer();
+        }
+        updatePlayTimeAnalyticsUI();
+    };
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(' ' + (t.enable || "Enable Play Time Analytics")));
+    controls.appendChild(label);
+
+    // Show/hide analytics button
+    const btn = document.createElement('button');
+    btn.id = 'ptaShowBtn';
+    btn.className = 'pta-show-btn';
+    btn.textContent = t.show || "Show Analytics";
+    btn.onclick = function () {
+        const pane = document.getElementById('playTimeAnalyticsPane');
+        if (pane.style.display === 'block') {
+            pane.style.display = 'none';
+            btn.textContent = t.show || "Show Analytics";
+        } else {
+            pane.style.display = 'block';
+            btn.textContent = t.hide || "Hide Analytics";
+            updatePlayTimeAnalyticsUI();
+        }
+    };
+    controls.appendChild(btn);
+
+    // Analytics pane
+    let analyticsDiv = document.getElementById('playTimeAnalyticsPane');
+    if (!analyticsDiv) {
+        analyticsDiv = document.createElement('div');
+        analyticsDiv.id = 'playTimeAnalyticsPane';
+        analyticsDiv.className = 'pta-pane';
+        analyticsDiv.style.display = 'none';
+        controls.appendChild(analyticsDiv);
+    }
+}
+
+// --- Patch updateUIText to update analytics toggle/button ---
+const _orig_updateUIText = updateUIText;
+updateUIText = function () {
+    _orig_updateUIText();
+    // Update analytics toggle/button
+    const t = translations[currentLang].playTimeAnalytics;
+    const label = document.getElementById('playTimeAnalyticsToggle');
+    if (label && label.childNodes[1]) {
+        label.childNodes[1].nodeValue = ' ' + (t.enable || "Enable Play Time Analytics");
+    }
+    const btn = document.getElementById('ptaShowBtn');
+    if (btn) {
+        btn.textContent = document.getElementById('playTimeAnalyticsPane')?.style.display === 'block'
+            ? (t.hide || "Hide Analytics")
+            : (t.show || "Show Analytics");
+    }
+    updatePlayTimeAnalyticsUI();
+};
+
+
+// --- Save site time on unload ---
+window.addEventListener('beforeunload', function () {
+    stopSiteTimer();
+    // Stop all game timers
+    if (playTimeAnalyticsEnabled) {
+        Object.keys(perGamePlayStart).forEach(stopGamePlayTimer);
+    }
+});
+
+// Expose for HTML
+window.resetPlayTimeAnalytics = resetPlayTimeAnalytics;
