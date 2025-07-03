@@ -827,6 +827,9 @@ function createGameWindow({ id, title, url, game }) {
         e.stopPropagation();
         toggleMaximizeGameWindow(win, id);
     };
+    // Prevent tap-through on mobile: stop mousedown/touchstart propagation
+    maxBtn.onmousedown = e => e.stopPropagation();
+    maxBtn.ontouchstart = e => e.stopPropagation();
 
     // Close button
     const closeBtn = document.createElement('button');
@@ -842,6 +845,9 @@ function createGameWindow({ id, title, url, game }) {
         e.stopPropagation();
         closeGameWindow(id);
     };
+    // Prevent tap-through on mobile: stop mousedown/touchstart propagation
+    closeBtn.onmousedown = e => e.stopPropagation();
+    closeBtn.ontouchstart = e => e.stopPropagation();
 
     controls.appendChild(maxBtn);
     controls.appendChild(closeBtn);
@@ -2003,12 +2009,13 @@ function renderPlayTimeAnalyticsToggle() {
     btn.textContent = t.show || "Show Analytics";
     btn.onclick = function () {
         const pane = document.getElementById('playTimeAnalyticsPane');
+        const t2 = translations[currentLang].playTimeAnalytics; // Always get latest translation
         if (pane.style.display === 'block') {
             pane.style.display = 'none';
-            btn.textContent = t.show || "Show Analytics";
+            btn.textContent = t2.show || "Show Analytics";
         } else {
             pane.style.display = 'block';
-            btn.textContent = t.hide || "Hide Analytics";
+            btn.textContent = t2.hide || "Hide Analytics";
             updatePlayTimeAnalyticsUI();
         }
     };
