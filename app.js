@@ -1667,7 +1667,6 @@ function updateUIText() {
     }
 }
 
-
 // --- Patch init to add auto-save checkbox and restore windows on load ---
 function init() {
     // Add language selector to controls
@@ -1800,62 +1799,6 @@ let siteTimeStart = Date.now();
 let siteTimeAccum = getTotalSiteTime();
 let perGamePlayStart = {}; // {gameId: startTimestamp}
 let perGamePlayAccum = getPlayTimeAnalytics(); // {gameId: ms}
-
-// --- Translations patch ---
-Object.keys(translations).forEach(lang => {
-    translations[lang].playTimeAnalytics = translations[lang].playTimeAnalytics || {};
-    Object.assign(translations[lang].playTimeAnalytics, {
-        enable: {
-            en: "Enable Play Time Analytics",
-            es: "Activar análisis de tiempo de juego",
-            fr: "Activer l'analyse du temps de jeu",
-            de: "Spielzeit-Analyse aktivieren",
-            zh: "启用游戏时间分析"
-        }[lang] || "Enable Play Time Analytics",
-        totalSite: {
-            en: "Total Site Time",
-            es: "Tiempo total en el sitio",
-            fr: "Temps total sur le site",
-            de: "Gesamte Seitenzeit",
-            zh: "站点总时长"
-        }[lang] || "Total Site Time",
-        perGame: {
-            en: "Per Game/App Time",
-            es: "Tiempo por juego/app",
-            fr: "Temps par jeu/app",
-            de: "Zeit pro Spiel/App",
-            zh: "每个游戏/应用时长"
-        }[lang] || "Per Game/App Time",
-        show: {
-            en: "Show Analytics",
-            es: "Mostrar análisis",
-            fr: "Afficher l'analyse",
-            de: "Analyse anzeigen",
-            zh: "显示分析"
-        }[lang] || "Show Analytics",
-        hide: {
-            en: "Hide Analytics",
-            es: "Ocultar análisis",
-            fr: "Masquer l'analyse",
-            de: "Analyse ausblenden",
-            zh: "隐藏分析"
-        }[lang] || "Hide Analytics",
-        reset: {
-            en: "Reset Analytics",
-            es: "Restablecer análisis",
-            fr: "Réinitialiser l'analyse",
-            de: "Analyse zurücksetzen",
-            zh: "重置分析"
-        }[lang] || "Reset Analytics",
-        none: {
-            en: "No data yet.",
-            es: "Sin datos aún.",
-            fr: "Pas encore de données.",
-            de: "Noch keine Daten.",
-            zh: "暂无数据。"
-        }[lang] || "No data yet."
-    });
-});
 
 // --- Play Time Analytics Storage ---
 function getPlayTimeAnalyticsEnabled() {

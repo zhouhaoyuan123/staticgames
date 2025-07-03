@@ -48,6 +48,15 @@ const translations = {
         sortByUpdated: "Last Updated",
         ascending: "Ascending",
         descending: "Descending",
+        playTimeAnalytics: {
+            enable: "Enable Play Time Analytics",
+            totalSite: "Total Site Time",
+            perGame: "Per Game/App Time",
+            show: "Show Analytics",
+            hide: "Hide Analytics",
+            reset: "Reset Analytics",
+            none: "No data yet."
+        }
     },
     es: {
         title: "App & Game Platform",
@@ -96,6 +105,15 @@ const translations = {
         sortByUpdated: "Última actualización",
         ascending: "Ascendente",
         descending: "Descendente",
+        playTimeAnalytics: {
+            enable: "Activar análisis de tiempo de juego",
+            totalSite: "Tiempo total en el sitio",
+            perGame: "Tiempo por juego/app",
+            show: "Mostrar análisis",
+            hide: "Ocultar análisis",
+            reset: "Restablecer análisis",
+            none: "Sin datos aún."
+        }
     },
     fr: {
         title: "App & Game Platform",
@@ -144,6 +162,15 @@ const translations = {
         sortByUpdated: "Dernière mise à jour",
         ascending: "Ascendant",
         descending: "Descendant",
+        playTimeAnalytics: {
+            enable: "Activer l'analyse du temps de jeu",
+            totalSite: "Temps total sur le site",
+            perGame: "Temps par jeu/app",
+            show: "Afficher l'analyse",
+            hide: "Masquer l'analyse",
+            reset: "Réinitialiser l'analyse",
+            none: "Pas encore de données."
+        }
     },
     de: {
         title: "App & Game Platform",
@@ -192,6 +219,15 @@ const translations = {
         sortByUpdated: "Zuletzt aktualisiert",
         ascending: "Aufsteigend",
         descending: "Absteigend",
+        playTimeAnalytics: {
+            enable: "Spielzeit-Analyse aktivieren",
+            totalSite: "Gesamte Seitenzeit",
+            perGame: "Zeit pro Spiel/App",
+            show: "Analyse anzeigen",
+            hide: "Analyse ausblenden",
+            reset: "Analyse zurücksetzen",
+            none: "Noch keine Daten."
+        }
     },
     zh: {
         title: "应用和游戏集",
@@ -240,5 +276,14 @@ const translations = {
         sortByUpdated: "最后更新",
         ascending: "升序",
         descending: "降序",
+        playTimeAnalytics: {
+            enable: "启用游戏时间分析",
+            totalSite: "站点总时长",
+            perGame: "每个游戏/应用时长",
+            show: "显示分析",
+            hide: "隐藏分析",
+            reset: "重置分析",
+            none: "暂无数据。"
+        }
     }
 };
