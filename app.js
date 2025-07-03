@@ -823,7 +823,7 @@ function createGameWindow({ id, title, url, game }) {
         toggleMaximizeGameWindow(win, id);
     };
     // Add touch support for maximize
-    maxBtn.ontouchstart = e => {
+    maxBtn.ontouchend = e => {
         e.stopPropagation();
         toggleMaximizeGameWindow(win, id);
     };
@@ -838,7 +838,7 @@ function createGameWindow({ id, title, url, game }) {
         closeGameWindow(id);
     };
     // Add touch support for close
-    closeBtn.ontouchstart = e => {
+    closeBtn.ontouchend = e => {
         e.stopPropagation();
         closeGameWindow(id);
     };
