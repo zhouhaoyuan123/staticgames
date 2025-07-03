@@ -12,8 +12,8 @@ function debounce(func, wait) {
 
 function isTouchDevice() {
     return (('ontouchstart' in window) ||
-    (navigator.maxTouchPoints > 0) ||
-    (navigator.msMaxTouchPoints > 0));
+        (navigator.maxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints > 0));
 }
 function getGamesPerPage() {
     const width = window.innerWidth;
@@ -63,7 +63,7 @@ function setLanguage(lang) {
         window.history.replaceState({}, '', url.toString());
     }
     const langSelector = document.getElementById('langSelector');
-    if(langSelector) {
+    if (langSelector) {
         langSelector.value = lang;
     }
     updateUIText();
@@ -88,7 +88,7 @@ function setLanguage(lang) {
 // Update titles of open game windows when language changes
 function updateOpenGameWindowTitles() {
     const tLang = currentLang;
-    Object.values(openGameWindows).forEach(({win, game}) => {
+    Object.values(openGameWindows).forEach(({ win, game }) => {
         const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
         const titleSpan = win.querySelector('.game-window-title');
         if (titleSpan) titleSpan.textContent = name;
@@ -192,7 +192,7 @@ function setTheme(theme) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = cssFile;
-    link.onerror = function() {
+    link.onerror = function () {
         // Fallback to default theme if theme file doesn't exist
         window._showLangThemeWarning = true;
         const fallbackLink = document.createElement('link');
@@ -220,7 +220,7 @@ function setTheme(theme) {
         // Load JS file as a script element
         const script = document.createElement('script');
         script.src = themeObj.js + '?v=' + Math.floor(Date.now() / cache_lim);
-        script.onload = function() {};
+        script.onload = function () { };
         document.head.appendChild(script);
         window._themeScript = script;
     }
@@ -253,32 +253,32 @@ let tagSuggestions = [];
 
 function searchTags() {
     tagSearchTerm = document.getElementById('tagSearchInput').value.toLowerCase();
-    
+
     if (tagSearchTerm.length > 0) {
         showTagSuggestions();
     } else {
         hideTagSuggestions();
     }
-    
+
     renderTagCloud();
 }
 
 function showTagSuggestions() {
     const allTags = [...new Set(gameDatabase.flatMap(game => game.tags))];
     const t = translations[currentLang] || translations.en;
-    
+
     // Find matching tags that aren't already selected
     const matchingTags = allTags.filter(tag => {
         const tagName = (t.tagNames && t.tagNames[tag]) || tag;
-        return tagName.toLowerCase().includes(tagSearchTerm) && 
-               !currentFilters.activeTags.includes(tag);
+        return tagName.toLowerCase().includes(tagSearchTerm) &&
+            !currentFilters.activeTags.includes(tag);
     }).slice(0, 8); // Limit to 8 suggestions
-    
+
     if (matchingTags.length === 0) {
         hideTagSuggestions();
         return;
     }
-    
+
     let suggestionsContainer = document.getElementById('tagSuggestions');
     if (!suggestionsContainer) {
         suggestionsContainer = document.createElement('div');
@@ -286,12 +286,12 @@ function showTagSuggestions() {
         suggestionsContainer.className = 'tag-suggestions';
         document.getElementById('tagSearchInput').parentNode.appendChild(suggestionsContainer);
     }
-    
+
     suggestionsContainer.innerHTML = matchingTags.map(tag => {
         const tagName = (t.tagNames && t.tagNames[tag]) || tag;
         return `<div class="tag-suggestion" onclick="addTagFromSuggestion('${tag}')">${tagName}</div>`;
     }).join('');
-    
+
     suggestionsContainer.style.display = 'block';
 }
 
@@ -305,12 +305,12 @@ function hideTagSuggestions() {
 function addTagFromSuggestion(tag) {
     currentFilters.activeTags.push(tag);
     currentPage = 1;
-    
+
     // Clear search input and hide suggestions
     document.getElementById('tagSearchInput').value = '';
     tagSearchTerm = '';
     hideTagSuggestions();
-    
+
     applyFilters();
     renderTagCloud();
 }
@@ -338,7 +338,7 @@ function renderTagCloud() {
         const bActive = currentFilters.activeTags.includes(b);
         if (aActive && !bActive) return -1;
         if (!aActive && bActive) return 1;
-        
+
         // Within same active state, sort alphabetically
         const aName = (t.tagNames && t.tagNames[a]) || a;
         const bName = (t.tagNames && t.tagNames[b]) || b;
@@ -348,7 +348,7 @@ function renderTagCloud() {
     // Always show active tags, then show others based on expand state
     const activeTags = sortedTags.filter(tag => currentFilters.activeTags.includes(tag));
     const inactiveTags = sortedTags.filter(tag => !currentFilters.activeTags.includes(tag));
-    
+
     let tagsToShow = activeTags;
     if (tagListExpanded) {
         tagsToShow = [...activeTags, ...inactiveTags];
@@ -473,12 +473,12 @@ function runInWorker(fn, data) {
             `
         ], { type: "application/javascript" });
         const worker = new Worker(URL.createObjectURL(blob));
-        worker.onmessage = function(e) {
+        worker.onmessage = function (e) {
             if (e.data && e.data.error) reject(e.data.error);
             else resolve(e.data.result);
             worker.terminate();
         };
-        worker.onerror = function(e) {
+        worker.onerror = function (e) {
             reject(e.message);
             worker.terminate();
         };
@@ -490,7 +490,7 @@ function runInWorker(fn, data) {
 function applyFilters() {
     const tLang = currentLang;
     // Move filtering to a worker if possible
-    runInWorker(function({gameDatabase, currentFilters, tLang, favIds}) {
+    runInWorker(function ({ gameDatabase, currentFilters, tLang, favIds }) {
         function getName(game) {
             return (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
         }
@@ -712,10 +712,10 @@ function renderPagination(totalGames = gameDatabase.length) {
 
 function changePage(page) {
     const totalGames = gameDatabase.filter(game => {
-        const matchesSearch = game.name.toLowerCase().includes(currentFilters.searchTerm) || 
-                            game.author.toLowerCase().includes(currentFilters.searchTerm);
-        const matchesTags = currentFilters.activeTags.length === 0 || 
-                          currentFilters.activeTags.every(tag => game.tags.includes(tag));
+        const matchesSearch = game.name.toLowerCase().includes(currentFilters.searchTerm) ||
+            game.author.toLowerCase().includes(currentFilters.searchTerm);
+        const matchesTags = currentFilters.activeTags.length === 0 ||
+            currentFilters.activeTags.every(tag => game.tags.includes(tag));
         return matchesSearch && matchesTags;
     }).length;
     const pageCount = Math.ceil(totalGames / gamesPerPage);
@@ -778,7 +778,7 @@ function loadGame(id) {
     addRecentlyPlayed(id);
 }
 
-function createGameWindow({id, title, url, game}) {
+function createGameWindow({ id, title, url, game }) {
     const container = document.getElementById('gameWindowsContainer');
     if (!container) return;
     // Initial size/position
@@ -887,7 +887,7 @@ function createGameWindow({id, title, url, game}) {
 
     // Add to DOM and registry
     container.appendChild(win);
-    openGameWindows[id] = {win, iframe, recDiv, game, maximized: false, prev: {}};
+    openGameWindows[id] = { win, iframe, recDiv, game, maximized: false, prev: {} };
     focusGameWindow(id);
 }
 
@@ -960,14 +960,14 @@ function renderGameWindowRecommendations(gameId) {
     entry.recDiv.innerHTML = `
         <h3>${t.recommended}</h3>
         ${recs.map(game => {
-            const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
-            const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
-            return `
+        const tagLabels = game.tags.map(tag => (t.tagNames && t.tagNames[tag]) || tag);
+        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name;
+        return `
             <div class="rec-item" onclick="loadGame(${game.id})">
                 ${name} (${tagLabels.join(', ')})
             </div>
             `;
-        }).join('')}
+    }).join('')}
     `;
 }
 
@@ -986,7 +986,7 @@ function dragGameWindow(e, win) {
         let startX = touch.clientX, startY = touch.clientY;
         let rect = win.getBoundingClientRect();
         let offsetX = startX - rect.left, offsetY = startY - rect.top;
-        moveListener = function(ev) {
+        moveListener = function (ev) {
             if (ev.touches.length !== 1) return;
             ev.preventDefault();
             const t = ev.touches[0];
@@ -997,11 +997,11 @@ function dragGameWindow(e, win) {
             win.style.left = x + 'px';
             win.style.top = y + 'px';
         };
-        upListener = function() {
-            document.removeEventListener('touchmove', moveListener, {passive:false});
+        upListener = function () {
+            document.removeEventListener('touchmove', moveListener, { passive: false });
             document.removeEventListener('touchend', upListener);
         };
-        document.addEventListener('touchmove', moveListener, {passive:false});
+        document.addEventListener('touchmove', moveListener, { passive: false });
         document.addEventListener('touchend', upListener);
     } else {
         e.preventDefault();
@@ -1009,7 +1009,7 @@ function dragGameWindow(e, win) {
         let startX = e.clientX, startY = e.clientY;
         let rect = win.getBoundingClientRect();
         let offsetX = startX - rect.left, offsetY = startY - rect.top;
-        moveListener = function(ev) {
+        moveListener = function (ev) {
             let x = ev.clientX - offsetX;
             let y = ev.clientY - offsetY;
             x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
@@ -1017,7 +1017,7 @@ function dragGameWindow(e, win) {
             win.style.left = x + 'px';
             win.style.top = y + 'px';
         };
-        upListener = function() {
+        upListener = function () {
             document.removeEventListener('mousemove', moveListener);
             document.removeEventListener('mouseup', upListener);
         };
@@ -1110,12 +1110,12 @@ function renderFavouritesSection() {
         </div>
         <div class="favourites-list">
             ${favGames.map(game => {
-                const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
-                return `<span class="favourite-game" onclick="loadGame(${game.id})">
+        const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
+        return `<span class="favourite-game" onclick="loadGame(${game.id})">
                     ${name}
                     <button class="fav-remove-btn" title="${t.removeFavourite || "Remove from favourites"}" onclick="event.stopPropagation();removeFavourite(${game.id});return false;">✕</button>
                 </span>`;
-            }).join('')}
+    }).join('')}
         </div>
     `;
 }
@@ -1148,12 +1148,12 @@ function renderRecentlyPlayedSection() {
         </div>
         <div class="recent-list">
             ${recentGames.map(game => {
-                const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
-                return `<span class="recent-game" onclick="loadGame(${game.id})">
+        const name = (game.name_i18n && game.name_i18n[currentLang]) || game.name;
+        return `<span class="recent-game" onclick="loadGame(${game.id})">
                     ${name}
                     <button class="recent-remove-btn" title="${t.clear || "Remove"}" onclick="event.stopPropagation();removeRecentlyPlayed(${game.id});return false;">✕</button>
                 </span>`;
-            }).join('')}
+    }).join('')}
         </div>
     `;
 }
@@ -1186,7 +1186,7 @@ function exportUserData() {
         currentTheme: getThemeFromURLorStorage(),
         currentLang: currentLang,
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1202,7 +1202,7 @@ function importUserData(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         try {
             const data = JSON.parse(e.target.result);
             if (Array.isArray(data.favourites)) setFavourites(data.favourites);
@@ -1238,8 +1238,8 @@ function importUserData(event) {
                 setAutoSaveWindowsSetting(0);
             }
             //for theme and lang
-            if(data.currentLang) setLanguage(data.currentLang);
-            if(data.currentTheme) setTheme(data.currentTheme);
+            if (data.currentLang) setLanguage(data.currentLang);
+            if (data.currentTheme) setTheme(data.currentTheme);
             renderFavouritesSection();
             renderRecentlyPlayedSection();
             applyFilters();
@@ -1369,7 +1369,7 @@ window.toggleTagListExpand = toggleTagListExpand;
 window.onload = init;
 
 // Add resize listener to update games per page
-window.addEventListener('resize', function() {
+window.addEventListener('resize', function () {
     const newGamesPerPage = getGamesPerPage();
     if (newGamesPerPage !== gamesPerPage) {
         gamesPerPage = newGamesPerPage;
@@ -1464,8 +1464,8 @@ function showGameDescPopup(gameId, cardElem) {
     descPopupElem = popup;
     // Dismiss on click outside or ESC
     setTimeout(() => {
-        document.addEventListener('mousedown', descPopupOutsideHandler, {capture:true});
-        document.addEventListener('touchstart', descPopupOutsideHandler, {capture:true});
+        document.addEventListener('mousedown', descPopupOutsideHandler, { capture: true });
+        document.addEventListener('touchstart', descPopupOutsideHandler, { capture: true });
         document.addEventListener('keydown', descPopupEscHandler);
     }, 10);
 }
@@ -1474,8 +1474,8 @@ function hideGameDescPopup() {
         descPopupElem.remove();
         descPopupElem = null;
     }
-    document.removeEventListener('mousedown', descPopupOutsideHandler, {capture:true});
-    document.removeEventListener('touchstart', descPopupOutsideHandler, {capture:true});
+    document.removeEventListener('mousedown', descPopupOutsideHandler, { capture: true });
+    document.removeEventListener('touchstart', descPopupOutsideHandler, { capture: true });
     document.removeEventListener('keydown', descPopupEscHandler);
 }
 function descPopupOutsideHandler(e) {
@@ -1504,12 +1504,36 @@ function showTapBlocker() {
         blocker.style.zIndex = '999999';
         blocker.style.background = 'transparent';
         blocker.style.pointerEvents = 'auto';
+        blocker.style.touchAction = 'none'; // Ensure all touch events are captured
+
+        // Prevent all pointer/touch/mouse events from propagating
+        blocker.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        blocker.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        blocker.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        blocker.addEventListener('mouseup', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        blocker.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
         document.body.appendChild(blocker);
     }
     blocker.style.display = 'block';
+    // Always remove after a short delay
     setTimeout(() => {
         blocker.style.display = 'none';
-    }, 350); // 350ms is enough to absorb the tap
+    }, 500); // 350ms is enough to absorb the tap
 }
 
 // --- Auto-Save Open Game Windows ---
@@ -1536,7 +1560,7 @@ function restoreOpenGameWindows() {
     let saved = [];
     try {
         saved = JSON.parse(localStorage.getItem(SAVED_WINDOWS_KEY)) || [];
-    } catch {}
+    } catch { }
     if (!Array.isArray(saved) || !saved.length) {
         return;
     }
@@ -1683,7 +1707,7 @@ function init() {
         checkbox.type = 'checkbox';
         checkbox.id = 'autoSaveWindowsCheckbox';
         checkbox.checked = getAutoSaveWindowsSetting();
-        checkbox.onchange = function() {
+        checkbox.onchange = function () {
             setAutoSaveWindowsSetting(checkbox.checked);
             if (checkbox.checked) saveOpenGameWindows();
         };
@@ -1711,23 +1735,23 @@ function init() {
         setTimeout(restoreOpenGameWindows, 0);
     }
 
-    document.getElementById('searchInput').addEventListener('input', debounce(function() {
+    document.getElementById('searchInput').addEventListener('input', debounce(function () {
         currentFilters.searchTerm = this.value.toLowerCase();
         currentPage = 1;
         applyFilters();
     }, 300));
 
-    document.getElementById('tagSearchInput').addEventListener('input', debounce(function() {
+    document.getElementById('tagSearchInput').addEventListener('input', debounce(function () {
         searchTags();
     }, 300));
 
     // Hide tag suggestions when clicking outside
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const tagSearchInput = document.getElementById('tagSearchInput');
         const suggestionsContainer = document.getElementById('tagSuggestions');
-        
-        if (tagSearchInput && suggestionsContainer && 
-            !tagSearchInput.contains(e.target) && 
+
+        if (tagSearchInput && suggestionsContainer &&
+            !tagSearchInput.contains(e.target) &&
             !suggestionsContainer.contains(e.target)) {
             hideTagSuggestions();
         }
@@ -1741,17 +1765,17 @@ function autoSaveIfEnabled() {
 
 // Patch create/close/maximize/restore to auto-save
 const _orig_createGameWindow = createGameWindow;
-createGameWindow = function(args) {
+createGameWindow = function (args) {
     _orig_createGameWindow(args);
     autoSaveIfEnabled();
 };
 const _orig_closeGameWindow = closeGameWindow;
-closeGameWindow = function(id) {
+closeGameWindow = function (id) {
     _orig_closeGameWindow(id);
     autoSaveIfEnabled();
 };
 const _orig_toggleMaximizeGameWindow = toggleMaximizeGameWindow;
-toggleMaximizeGameWindow = function(win, id) {
+toggleMaximizeGameWindow = function (win, id) {
     _orig_toggleMaximizeGameWindow(win, id);
     autoSaveIfEnabled();
 };
