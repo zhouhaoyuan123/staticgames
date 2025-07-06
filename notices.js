@@ -12,6 +12,8 @@ window.noticesConfig = {
         {
             id: 1,
             type: "info",
+            canClose: true,
+            lastMod: 1,
             content: {
                 en: "Welcome to the platform! Enjoy our games. See the <a href='https://codeberg.org/zhou2012/StaticGames'>repo</a>. <a href='https://staticgames.rf.gd/poll/index.php/846812?lang=en'>Feedback channel</a> Note: The page might refresh when you change themes, so save your data first! ",
                 es: "¡Bienvenido a la plataforma! Disfruta de nuestros juegos. Consulta el <a href='https://codeberg.org/zhou2012/StaticGames'>repositorio</a>. Note : La página puede refrescarse al cambiar de tema, ¡así que guarda tus datos primero!",

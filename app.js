@@ -1394,18 +1394,76 @@ function renderNotices() {
     const config = window.noticesConfig;
     if (!config || !config.notices || !config.header) return;
     const header = config.header[lang] || config.header.en || "Notice";
+
+    // Helper: hash a string (simple, for notice content)
+    function hashString(str) {
+        let hash = 0, i, chr;
+        if (!str) return hash;
+        for (i = 0; i < str.length; i++) {
+            chr = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0;
+        }
+        return hash;
+    }
+
+    // Get dismissed notices from localStorage
+    let dismissed = {};
+    try {
+        dismissed = JSON.parse(localStorage.getItem('dismissedNotices') || '{}');
+    } catch {}
+
+    // Compose notices HTML
     const notices = config.notices
-        .filter(n => typeof n.shouldShow !== "function" || n.shouldShow())
+        .filter(n => {
+            if (typeof n.shouldShow === "function" && !n.shouldShow()) return false;
+            if (!n.canClose) return true;
+            // Compose unique hash: id + content + lastMod
+            const content = (n.content && (n.content[lang] || n.content.en || "")) || "";
+            let lastMod = n.lastMod;
+            // If not present, try to get from game_list.js by id
+            if (!lastMod && typeof gameDatabase !== "undefined" && n.id) {
+                const game = gameDatabase.find(g => g.id === n.id);
+                if (game && game.lastMod) lastMod = game.lastMod;
+                else if (game && game.updated) lastMod = game.updated;
+            }
+            const hashInput = n.id + "|" + content + "|" + (lastMod || "");
+            const hash = hashString(hashInput);
+            return dismissed[n.id] !== hash;
+        })
         .map(n => {
             const type = n.type || "default";
-            return `<div class="notice-box ${type}">
-                <div class="notice-header">${header}</div>
-                <div class="notice-content">${n.content[lang] || n.content.en || ""}</div>
+            const content = (n.content && (n.content[lang] || n.content.en || "")) || "";
+            const canClose = n.canClose;
+            let lastMod = n.lastMod;
+            if (!lastMod && typeof gameDatabase !== "undefined" && n.id) {
+                const game = gameDatabase.find(g => g.id === n.id);
+                if (game && game.lastMod) lastMod = game.lastMod;
+                else if (game && game.updated) lastMod = game.updated;
+            }
+            const hashInput = n.id + "|" + content + "|" + (lastMod || "");
+            const hash = hashString(hashInput);
+            const closeBtn = canClose
+                ? `<button class="notice-close-btn" onclick="window.dismissNotice('${n.id}', ${hash})" title="Close" style="float:right; margin-left:8px;">✕</button>`
+                : '';
+            return `<div class="notice-box ${type}" data-notice-id="${n.id}">
+                <div class="notice-header">${header}${closeBtn}</div>
+                <div class="notice-content">${content}</div>
             </div>`;
         })
         .join('');
     document.getElementById('noticePane').innerHTML = notices;
 }
+
+window.dismissNotice = function(id, hash) {
+    let dismissed = {};
+    try {
+        dismissed = JSON.parse(localStorage.getItem('dismissedNotices') || '{}');
+    } catch {}
+    dismissed[id] = hash;
+    localStorage.setItem('dismissedNotices', JSON.stringify(dismissed));
+    renderNotices();
+};
 
 // --- Description Popup Logic ---
 let descPopupTimer = null;
