@@ -1693,6 +1693,9 @@ function updateUIText() {
     document.getElementById('resetBtn').textContent = t.reset || 'Reset';
     document.getElementById('importBtn').textContent = t.importData;
     document.getElementById('exportBtn').textContent = t.exportData;
+    // Add/update clear all data button text
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) clearAllBtn.textContent = t.clearAll || "Clear All Data";
     // Timer controls
     updateTimerUIText();
     // Update theme selector to reflect new language
@@ -2064,3 +2067,11 @@ window.addEventListener('beforeunload', function () {
 
 // Expose for HTML
 window.resetPlayTimeAnalytics = resetPlayTimeAnalytics;
+// --- Clear All Data ---
+function clearAllData() {
+    if (confirm((translations[currentLang]?.clearAll || "Clear All Data") + "?")) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+window.clearAllData = clearAllData;
