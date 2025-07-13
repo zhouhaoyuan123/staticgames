@@ -1191,6 +1191,10 @@ function exportUserData() {
         }).filter(Boolean),
         currentTheme: getThemeFromURLorStorage(),
         currentLang: currentLang,
+        // --- PATCH: export analytics status and data ---
+        playTimeAnalyticsEnabled: playTimeAnalyticsEnabled,
+        playTimeAnalyticsData: getPlayTimeAnalytics(),
+        totalSiteTime: getTotalSiteTime()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -1204,6 +1208,7 @@ function exportUserData() {
         URL.revokeObjectURL(url);
     }, 100);
 }
+
 function importUserData(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1237,7 +1242,6 @@ function importUserData(event) {
                         }
                     }
                 });
-                //shift autosave checkbox
                 setAutoSaveWindowsSetting(1);
             }
             else {
@@ -1246,16 +1250,35 @@ function importUserData(event) {
             //for theme and lang
             if (data.currentLang) setLanguage(data.currentLang);
             if (data.currentTheme) setTheme(data.currentTheme);
+
+            // --- PATCH: import analytics status and data ---
+            if (typeof data.playTimeAnalyticsEnabled !== "undefined") {
+                setPlayTimeAnalyticsEnabled(data.playTimeAnalyticsEnabled);
+                // Set checkbox to checked if analytics is enabled
+                setTimeout(function() {
+                    var analyticsCheckbox = document.querySelector('#playTimeAnalyticsToggle input[type="checkbox"]');
+                    if (analyticsCheckbox) analyticsCheckbox.checked = !!data.playTimeAnalyticsEnabled;
+                }, 0);
+            }
+            if (typeof data.playTimeAnalyticsData === "object" && data.playTimeAnalyticsData !== null) {
+                setPlayTimeAnalytics(data.playTimeAnalyticsData);
+                perGamePlayAccum = getPlayTimeAnalytics();
+            }
+            if (typeof data.totalSiteTime === "number" || typeof data.totalSiteTime === "string") {
+                setTotalSiteTime(Number(data.totalSiteTime) || 0);
+                siteTimeAccum = getTotalSiteTime();
+            }
+
             renderFavouritesSection();
             renderRecentlyPlayedSection();
             applyFilters();
+            updatePlayTimeAnalyticsUI();
             alert("Data imported successfully.");
         } catch {
             alert("Invalid data file.");
         }
     };
     reader.readAsText(file);
-    // Reset input so user can import again if needed
     event.target.value = "";
 }
 
