@@ -895,6 +895,14 @@ function createGameWindow({ id, title, url, game }) {
     container.appendChild(win);
     openGameWindows[id] = { win, iframe, recDiv, game, maximized: false, prev: {} };
     focusGameWindow(id);
+
+    // Start play time tracking if analytics enabled
+    if (playTimeAnalyticsEnabled && id !== undefined) {
+        startGamePlayTimer(id);
+    }
+
+    // Auto-save window state if enabled
+    autoSaveIfEnabled();
 }
 
 function focusGameWindow(id) {
@@ -906,12 +914,21 @@ function focusGameWindow(id) {
 function closeGameWindow(id) {
     const entry = openGameWindows[id];
     if (entry) {
-        // Prevent tap-through: add a short blocker overlay on mobile/touch
+        // Stop play time tracking if analytics enabled
+        if (playTimeAnalyticsEnabled && id !== undefined) {
+            stopGamePlayTimer(id);
+        }
+
+        // Show tap blocker on mobile
         if (isTouchDevice()) {
             showTapBlocker();
         }
+
         entry.win.remove();
         delete openGameWindows[id];
+
+        // Auto-save window state if enabled
+        autoSaveIfEnabled();
     }
 }
 
@@ -1216,19 +1233,27 @@ function importUserData(event) {
     reader.onload = function (e) {
         try {
             const data = JSON.parse(e.target.result);
+            
+            // Import favorites and recently played
             if (Array.isArray(data.favourites)) setFavourites(data.favourites);
-            if (Array.isArray(data.recentlyPlayed)) localStorage.setItem(RECENT_KEY, JSON.stringify(data.recentlyPlayed));
-            //for saved windows
+            if (Array.isArray(data.recentlyPlayed)) {
+                localStorage.setItem(RECENT_KEY, JSON.stringify(data.recentlyPlayed));
+            }
+
+            // Handle window auto-save settings
             var autoSaveCheckbox = document.getElementById('autoSaveWindowsCheckbox');
             autoSaveCheckbox.checked = data.autoSaveWindows;
+            
+            // Restore saved windows if auto-save enabled
             if (data.autoSaveWindows && Array.isArray(data.openWindows)) {
                 data.openWindows.forEach(winData => {
                     if (winData && winData.id && !openGameWindows[winData.id]) {
+                        const game = gameDatabase.find(g => g.id === winData.id);
                         createGameWindow({
                             id: winData.id,
-                            title: gameDatabase.find(g => g.id === winData.id)?.name || "Game " + winData.id,
-                            url: gameDatabase.find(g => g.id === winData.id)?.url || "#",
-                            game: gameDatabase.find(g => g.id === winData.id) || {}
+                            title: game?.name || "Game " + winData.id,
+                            url: game?.url || "#",
+                            game: game || {}
                         });
                         const entry = openGameWindows[winData.id];
                         if (entry && entry.win) {
@@ -1243,20 +1268,20 @@ function importUserData(event) {
                     }
                 });
                 setAutoSaveWindowsSetting(1);
-            }
-            else {
+            } else {
                 setAutoSaveWindowsSetting(0);
             }
-            //for theme and lang
+
+            // Import theme and language settings
             if (data.currentLang) setLanguage(data.currentLang);
             if (data.currentTheme) setTheme(data.currentTheme);
 
-            // --- PATCH: import analytics status and data ---
+            // Import analytics data
             if (typeof data.playTimeAnalyticsEnabled !== "undefined") {
                 setPlayTimeAnalyticsEnabled(data.playTimeAnalyticsEnabled);
-                // Set checkbox to checked if analytics is enabled
-                setTimeout(function() {
-                    var analyticsCheckbox = document.querySelector('#playTimeAnalyticsToggle input[type="checkbox"]');
+                // Update analytics checkbox state
+                setTimeout(() => {
+                    const analyticsCheckbox = document.querySelector('#playTimeAnalyticsToggle input[type="checkbox"]');
                     if (analyticsCheckbox) analyticsCheckbox.checked = !!data.playTimeAnalyticsEnabled;
                 }, 0);
             }
@@ -1269,6 +1294,7 @@ function importUserData(event) {
                 siteTimeAccum = getTotalSiteTime();
             }
 
+            // Update UI
             renderFavouritesSection();
             renderRecentlyPlayedSection();
             applyFilters();
@@ -1924,7 +1950,7 @@ function resetPlayTimeAnalytics() {
     localStorage.removeItem(PLAYTIME_ANALYTICS_KEY);
     localStorage.removeItem(TOTAL_SITE_TIME_KEY);
     perGamePlayAccum = {};
-    siteTimeAccum = 0;
+    siteTimeAccum =  0;
     updatePlayTimeAnalyticsUI();
 }
 
@@ -1952,27 +1978,6 @@ function formatDuration(ms) {
     const m = min % 60;
     return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
-
-// --- Patch create/closeGameWindow to track play time ---
-const _orig_createGameWindow2 = createGameWindow;
-createGameWindow = function (args) {
-             _orig_createGameWindow2(args);
-    if (playTimeAnalyticsEnabled && args && args.id !== undefined) {
-        startGamePlayTimer(args.id);
-    }
-    autoSaveIfEnabled && autoSaveIfEnabled();
-};
-const _orig_closeGameWindow2 = closeGameWindow;
-closeGameWindow = function (id) {
-    if (playTimeAnalyticsEnabled && id !== undefined) {
-        stopGamePlayTimer(id);
-    }
-    _orig_closeGameWindow2(id);
-    autoSaveIfEnabled && autoSaveIfEnabled();
-};
-
-// --- Patch toggleMaximizeGameWindow to not affect play time analytics ---
-// ...existing code...
 
 // --- Play Time Analytics UI ---
 function updatePlayTimeAnalyticsUI() {
