@@ -1726,6 +1726,7 @@ function updateUIText() {
         sortDirSel.options[0].textContent = t.ascending || 'Ascending';
         sortDirSel.options[1].textContent = t.descending || 'Descending';
     }
+    document.getElementById('randomBtn').textContent = t.randomGame || "Random Game";
 }
 
 // --- Patch init to add auto-save checkbox and restore windows on load ---
@@ -1932,7 +1933,7 @@ function formatDuration(ms) {
 // --- Patch create/closeGameWindow to track play time ---
 const _orig_createGameWindow2 = createGameWindow;
 createGameWindow = function (args) {
-    _orig_createGameWindow2(args);
+             _orig_createGameWindow2(args);
     if (playTimeAnalyticsEnabled && args && args.id !== undefined) {
         startGamePlayTimer(args.id);
     }
@@ -2065,8 +2066,41 @@ window.addEventListener('beforeunload', function () {
     }
 });
 
+// --- Random Game Button ---
+function openRandomGame() {
+    // Filter games using current filters
+    const tLang = currentLang;
+    const filtered = gameDatabase.filter(game => {
+        const name = (game.name_i18n && game.name_i18n[tLang]) || game.name || "";
+        const author = (game.author_i18n && game.author_i18n[tLang]) || game.author || "";
+        const matchesSearch =
+            name.toLowerCase().includes(currentFilters.searchTerm) ||
+            author.toLowerCase().includes(currentFilters.searchTerm);
+        const matchesTags =
+            currentFilters.activeTags.length === 0 ||
+            currentFilters.activeTags.every(tag => game.tags.includes(tag));
+        return matchesSearch && matchesTags;
+    });
+    if (filtered.length === 0) {
+        alert(translations[currentLang]?.noGamesForRandom || "No games match current filters. Please reset filters.");
+        return;
+    }
+    const idx = Math.floor(Math.random() * filtered.length);
+    loadGame(filtered[idx].id);
+}
+
 // Expose for HTML
-window.resetPlayTimeAnalytics = resetPlayTimeAnalytics;
+window.openRandomGame = openRandomGame;
+
+// --- Add translations for random game ---
+Object.keys(translations).forEach(lang => {
+    translations[lang] = {
+        ...translations[lang],
+        randomGame: translations[lang].randomGame || "Random Game",
+        noGamesForRandom: translations[lang].noGamesForRandom || "No games match current filters. Please reset filters."
+    };
+});
+
 // --- Clear All Data ---
 function clearAllData() {
     if (confirm((translations[currentLang]?.clearAll || "Clear All Data") + "?")) {

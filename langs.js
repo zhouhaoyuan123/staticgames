@@ -57,7 +57,9 @@ const translations = {
             hide: "Hide Analytics",
             reset: "Reset Analytics",
             none: "No data yet."
-        }
+        },
+        randomGame: "Random Game",
+        noGamesForRandom: "No games match current filters. Please reset filters."
     },
     es: {
         title: "App & Game Platform",
@@ -115,7 +117,9 @@ const translations = {
             hide: "Ocultar análisis",
             reset: "Restablecer análisis",
             none: "Sin datos aún."
-        }
+        },
+        randomGame: "Juego Aleatorio",
+        noGamesForRandom: "Ningún juego coincide con los filtros actuales. Restablece los filtros."
     },
     fr: {
         title: "App & Game Platform",
@@ -173,7 +177,9 @@ const translations = {
             hide: "Masquer l'analyse",
             reset: "Réinitialiser l'analyse",
             none: "Pas encore de données."
-        }
+        },
+        randomGame: "Jeu Aléatoire",
+        noGamesForRandom: "Aucun jeu ne correspond aux filtres actuels. Veuillez réinitialiser les filtres."
     },
     de: {
         title: "App & Game Platform",
@@ -231,7 +237,9 @@ const translations = {
             hide: "Analyse ausblenden",
             reset: "Analyse zurücksetzen",
             none: "Noch keine Daten."
-        }
+        },
+        randomGame: "Zufälliges Spiel",
+        noGamesForRandom: "Kein Spiel entspricht den aktuellen Filtern. Bitte Filter zurücksetzen."
     },
     zh: {
         title: "应用和游戏集",
@@ -289,6 +297,8 @@ const translations = {
             hide: "隐藏分析",
             reset: "重置分析",
             none: "暂无数据。"
-        }
+        },
+        randomGame: "随机游戏",
+        noGamesForRandom: "没有游戏符合当前筛选条件，请重置筛选。"
     }
 };

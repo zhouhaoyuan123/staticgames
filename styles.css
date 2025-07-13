@@ -1548,3 +1548,20 @@ body, html {
 #clearAllBtn:hover {
     background: #b71c1c;
 }
+
+#randomBtn {
+    background: #ff9800;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    padding: 10px 18px;
+    min-height: 44px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-left: 8px;
+    transition: background 0.2s;
+}
+#randomBtn:hover {
+    background: #f57c00;
+}
