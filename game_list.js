@@ -23,20 +23,6 @@ const gameDatabase = [
         tags: ["singleplayer","Aaron"],
         popularity: 0,
         passSettings: ["theme"],
-        // images: {
-        //     en: "images/rocket_en.png",
-        //     es: "images/rocket_es.png",
-        //     fr: "images/rocket_fr.png",
-        //     de: "images/rocket_de.png",
-        //     zh: "images/rocket_zh.png"
-        // },
-        // gifs: {
-        //     en: "images/rocket_en.gif",
-        //     es: "images/rocket_es.gif",
-        //     fr: "images/rocket_fr.gif",
-        //     de: "images/rocket_de.gif",
-        //     zh: "images/rocket_zh.gif"
-        // },
         playGifOnMobile: true,
         description: "A fast-paced rocket flying game. Avoid obstacles and reach the goal!",
         description_i18n: {
@@ -202,7 +188,4 @@ const gameDatabase = [
         },
         updated: 20250720
         },
-    // Add more games...
 ];
-
-// If playGifOnMobile is not set, default is true

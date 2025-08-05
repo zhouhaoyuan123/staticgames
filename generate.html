@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Catalog Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-indigo-700 mb-2">Game Catalog Generator</h1>
+            <p class="text-gray-600">Automatically generate a beautiful catalog from your game_lists.js</p>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Output Format</label>
+                    <select id="format-select" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="markdown">Markdown</option>
+                        <option value="html">HTML</option>
+                        <option value="json">JSON</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                    <select id="sort-select" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="name">Name (A-Z)</option>
+                        <option value="date">Update Date (Newest)</option>
+                        <option value="popularity">Popularity</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter Tags</label>
+                    <select id="tag-select" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="all">All Tags</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button id="generate-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition flex items-center gap-2">
+                    <i class="fas fa-magic"></i> Generate Catalog
+                </button>
+                <button id="copy-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition flex items-center gap-2">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <button id="download-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center gap-2">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Preview</h2>
+                <div id="preview" class="prose max-w-none h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    <p class="text-gray-500 italic">Preview will appear here after generation</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Game Statistics</h2>
+                <div id="stats" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Total Games:</span>
+                        <span id="total-games" class="font-medium">0</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Unique Tags:</span>
+                        <span id="unique-tags" class="font-medium">0</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Last Updated:</span>
+                        <span id="last-updated" class="font-medium">-</span>
+                    </div>
+                    <div class="pt-4">
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Tag Distribution</h3>
+                        <div id="tag-chart" class="h-48"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Generated Output</h2>
+            <textarea id="output" class="w-full h-64 p-4 border border-gray-300 rounded-md font-mono text-sm" placeholder="Generated content will appear here..." readonly></textarea>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Load game data
+            let games = [];
+            try {
+                const response = await fetch('game_lists.js');
+                const jsContent = await response.text();
+                const jsonStr = jsToJson(jsContent);
+                games = JSON.parse(jsonStr);
+                updateStats(games);
+                populateTagFilter(games);
+            } catch (error) {
+                console.error('Error loading game data:', error);
+                alert('Error loading game data. Please check console for details.');
+            }
+
+            // Event listeners
+            document.getElementById('generate-btn').addEventListener('click', () => generateCatalog(games));
+            document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
+            document.getElementById('download-btn').addEventListener('click', downloadOutput);
+            document.getElementById('format-select').addEventListener('change', () => generateCatalog(games));
+            document.getElementById('sort-select').addEventListener('change', () => generateCatalog(games));
+            document.getElementById('tag-select').addEventListener('change', () => generateCatalog(games));
+
+            // Helper functions
+            function jsToJson(jsContent) {
+                // Remove comments
+                jsContent = jsContent.replace(/\/\/.*/g, '');
+                jsContent = jsContent.replace(/\/\*[\s\S]*?\*\//g, '');
+                
+                // Extract array content
+                const arrayStart = jsContent.indexOf('[');
+                const arrayEnd = jsContent.lastIndexOf(']') + 1;
+                let jsonStr = jsContent.slice(arrayStart, arrayEnd);
+                
+                // Convert to valid JSON
+                jsonStr = jsonStr.replace(/([{,]\s*)([a-zA-Z_]\w*)(\s*:)/g, '$1"$2"$3');
+                jsonStr = jsonStr.replace(/:\s*'([^']*)'/g, ': "$1"');
+                jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
+                jsonStr = jsonStr.replace(/True/g, 'true').replace(/False/g, 'false');
+                
+                return jsonStr;
+            }
+
+            function updateStats(games) {
+                document.getElementById('total-games').textContent = games.length;
+                
+                const allTags = games.flatMap(game => game.tags || ['untagged']);
+                const uniqueTags = [...new Set(allTags)];
+                document.getElementById('unique-tags').textContent = uniqueTags.length;
+                
+                const lastUpdated = Math.max(...games.map(game => game.updated));
+                document.getElementById('last-updated').textContent = lastUpdated || '-';
+                
+                // Update tag chart
+                const tagCounts = {};
+                allTags.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+                
+                const ctx = document.createElement('canvas');
+                document.getElementById('tag-chart').innerHTML = '';
+                document.getElementById('tag-chart').appendChild(ctx);
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(tagCounts),
+                        datasets: [{
+                            label: 'Games per Tag',
+                            data: Object.values(tagCounts),
+                            backgroundColor: 'rgba(79, 70, 229, 0.7)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function populateTagFilter(games) {
+                const allTags = games.flatMap(game => game.tags || ['untagged']);
+                const uniqueTags = [...new Set(allTags)].sort();
+                
+                const select = document.getElementById('tag-select');
+                uniqueTags.forEach(tag => {
+                    const option = document.createElement('option');
+                    option.value = tag;
+                    option.textContent = tag;
+                    select.appendChild(option);
+                });
+            }
+
+            function generateCatalog(games) {
+                const format = document.getElementById('format-select').value;
+                const sortBy = document.getElementById('sort-select').value;
+                const filterTag = document.getElementById('tag-select').value;
+                
+                // Filter and sort games
+                let filteredGames = [...games];
+                if (filterTag !== 'all') {
+                    filteredGames = filteredGames.filter(game => 
+                        game.tags && game.tags.includes(filterTag)
+                    );
+                }
+                
+                filteredGames.sort((a, b) => {
+                    if (sortBy === 'name') return a.name.localeCompare(b.name);
+                    if (sortBy === 'date') return b.updated - a.updated;
+                    if (sortBy === 'popularity') return (b.popularity || 0) - (a.popularity || 0);
+                    return 0;
+                });
+                
+                // Generate output based on format
+                let output = '';
+                if (format === 'markdown') {
+                    output = generateMarkdown(filteredGames);
+                } else if (format === 'html') {
+                    output = generateHTML(filteredGames);
+                } else if (format === 'json') {
+                    output = JSON.stringify(filteredGames, null, 2);
+                }
+                
+                document.getElementById('output').value = output;
+                updatePreview(output, format);
+            }
+
+            function generateMarkdown(games) {
+                const tagIndex = {};
+                games.forEach(game => {
+                    const tags = game.tags || ['untagged'];
+                    tags.forEach(tag => {
+                        if (!tagIndex[tag]) tagIndex[tag] = [];
+                        tagIndex[tag].push(game);
+                    });
+                });
+                
+                let md = '# Game Catalog\n\n';
+                
+                Object.keys(tagIndex).sort().forEach(tag => {
+                    md += `## ${tag.toUpperCase()}\n\n`;
+                    
+                    tagIndex[tag].forEach(game => {
+                        md += `### ${game.name}\n`;
+                        md += `- **Author**: ${game.author}\n`;
+                        md += `- **URL**: [${game.url}](${game.url})\n`;
+                        md += `- **Updated**: ${game.updated}\n`;
+                        md += `- **Description**: ${game.description}\n`;
+                        
+                        if (game.name_i18n) {
+                            md += `- **Localized Names**:\n`;
+                            Object.entries(game.name_i18n).forEach(([lang, name]) => {
+                                md += `  - ${lang}: ${name}\n`;
+                            });
+                        }
+                        
+                        md += '\n';
+                    });
+                });
+                
+                return md;
+            }
+
+            function generateHTML(games) {
+                let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Catalog</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Game Catalog</h1>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">`;
+                
+                games.forEach(game => {
+                    html += `
+            <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold mb-2">${game.name}</h2>
+                    <p class="text-gray-600 mb-1"><span class="font-medium">Author:</span> ${game.author}</p>
+                    <p class="text-gray-600 mb-1"><span class="font-medium">Updated:</span> ${game.updated}</p>
+                    <p class="text-gray-700 my-3">${game.description}</p>
+                    <a href="${game.url}" class="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Play Game</a>
+                </div>
+                ${game.tags ? `<div class="px-6 py-3 bg-gray-100">
+                    ${game.tags.map(tag => `<span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">${tag}</span>`).join('')}
+                </div>` : ''}
+            </div>`;
+                });
+                
+                html += `
+        </div>
+    </div>
+</body>
+</html>`;
+                
+                return html;
+            }
+
+            function updatePreview(content, format) {
+                const preview = document.getElementById('preview');
+                
+                if (format === 'markdown') {
+                    // Simple markdown rendering (basic tags only)
+                    let html = content
+                        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mb-4">$1</h1>')
+                        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mb-3 mt-6">$1</h2>')
+                        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-medium mb-2 mt-4">$1</h3>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-indigo-600 hover:underline">$1</a>')
+                        .replace(/^- (.*$)/gm, '<li>$1</li>')
+                        .replace(/\n/g, '<br>');
+                    
+                    preview.innerHTML = html;
+                } else if (format === 'html') {
+                    // Create a sandboxed iframe to render HTML safely
+                    preview.innerHTML = '<iframe class="w-full h-full border rounded" sandbox="allow-same-origin"></iframe>';
+                    const iframe = preview.querySelector('iframe');
+                    const blob = new Blob([content], {type: 'text/html'});
+                    iframe.src = URL.createObjectURL(blob);
+                } else if (format === 'json') {
+                    preview.innerHTML = `<pre class="text-sm overflow-auto">${content}</pre>`;
+                }
+            }
+
+            function copyToClipboard() {
+                const output = document.getElementById('output');
+                output.select();
+                document.execCommand('copy');
+                
+                // Show feedback
+                const btn = document.getElementById('copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }
+
+            function downloadOutput() {
+                const output = document.getElementById('output').value;
+                const format = document.getElementById('format-select').value;
+                const filename = `game_catalog.${format === 'html' ? 'html' : format === 'json' ? 'json' : 'md'}`;
+                
+                const blob = new Blob([output], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
