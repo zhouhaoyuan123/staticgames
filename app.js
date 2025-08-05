@@ -896,7 +896,7 @@ function createGameWindow({ id, title, url, game }) {
     openGameWindows[id] = { win, iframe, recDiv, game, maximized: false, prev: {} };
     focusGameWindow(id);
 
-    // Start play time tracking if analytics enabled
+    // Start play time tracking if analytics enabled 
     if (playTimeAnalyticsEnabled && id !== undefined) {
         startGamePlayTimer(id);
     }
@@ -921,7 +921,7 @@ function closeGameWindow(id) {
 
         // Show tap blocker on mobile
         if (isTouchDevice()) {
-            showTapBlocker();
+            showTapBlocker(); 
         }
 
         entry.win.remove();
@@ -972,6 +972,9 @@ function toggleMaximizeGameWindow(win, id) {
             showTapBlocker();
         }
     }
+
+    // Auto-save window state if enabled after maximize/restore
+    autoSaveIfEnabled();
 }
 
 function renderGameWindowRecommendations(gameId) {
@@ -1883,23 +1886,6 @@ function autoSaveIfEnabled() {
     if (getAutoSaveWindowsSetting()) saveOpenGameWindows();
 }
 
-// Patch create/close/maximize/restore to auto-save
-const _orig_createGameWindow = createGameWindow;
-createGameWindow = function (args) {
-    _orig_createGameWindow(args);
-    autoSaveIfEnabled();
-};
-const _orig_closeGameWindow = closeGameWindow;
-closeGameWindow = function (id) {
-    _orig_closeGameWindow(id);
-    autoSaveIfEnabled();
-};
-const _orig_toggleMaximizeGameWindow = toggleMaximizeGameWindow;
-toggleMaximizeGameWindow = function (win, id) {
-    _orig_toggleMaximizeGameWindow(win, id);
-    autoSaveIfEnabled();
-};
-
 // --- Play Time Analytics ---
 // Storage keys
 const PLAYTIME_ANALYTICS_KEY = "playTimeAnalytics";
@@ -2064,26 +2050,6 @@ function renderPlayTimeAnalyticsToggle() {
         controls.appendChild(analyticsDiv);
     }
 }
-
-// --- Patch updateUIText to update analytics toggle/button ---
-const _orig_updateUIText = updateUIText;
-updateUIText = function () {
-    _orig_updateUIText();
-    // Update analytics toggle/button
-    const t = translations[currentLang].playTimeAnalytics;
-    const label = document.getElementById('playTimeAnalyticsToggle');
-    if (label && label.childNodes[1]) {
-        label.childNodes[1].nodeValue = ' ' + (t.enable || "Enable Play Time Analytics");
-    }
-    const btn = document.getElementById('ptaShowBtn');
-    if (btn) {
-        btn.textContent = document.getElementById('playTimeAnalyticsPane')?.style.display === 'block'
-            ? (t.hide || "Hide Analytics")
-            : (t.show || "Show Analytics");
-    }
-    updatePlayTimeAnalyticsUI();
-};
-
 
 // --- Save site time on unload ---
 window.addEventListener('beforeunload', function () {
