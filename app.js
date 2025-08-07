@@ -813,6 +813,18 @@ function createGameWindow({ id, title, url, game }) {
     const controls = document.createElement('div');
     controls.className = 'game-window-controls';
 
+    // New tab button
+    const newTabBtn = document.createElement('button');
+    newTabBtn.className = 'game-window-btn';
+    newTabBtn.title = translations[currentLang].openInNewTab || 'Open in New Tab';
+    newTabBtn.innerHTML = '⧉';
+    newTabBtn.onclick = e => {
+        e.stopPropagation();
+        window.open(url, '_blank');
+    };
+    newTabBtn.onmousedown = e => e.stopPropagation();
+    newTabBtn.ontouchstart = e => e.stopPropagation();
+
     // Maximize/restore button
     const maxBtn = document.createElement('button');
     maxBtn.className = 'game-window-btn';
@@ -849,6 +861,7 @@ function createGameWindow({ id, title, url, game }) {
     closeBtn.onmousedown = e => e.stopPropagation();
     closeBtn.ontouchstart = e => e.stopPropagation();
 
+    controls.appendChild(newTabBtn);
     controls.appendChild(maxBtn);
     controls.appendChild(closeBtn);
 
@@ -1779,6 +1792,30 @@ function updateUIText() {
         sortDirSel.options[1].textContent = t.descending || 'Descending';
     }
     document.getElementById('randomBtn').textContent = t.randomGame || "Random Game";
+
+    // Update play time analytics toggle and button labels
+    const pta = t.playTimeAnalytics;
+    
+    // Update analytics toggle label
+    const ptaToggle = document.getElementById('playTimeAnalyticsToggle');
+    if (ptaToggle && ptaToggle.childNodes[1]) {
+        ptaToggle.childNodes[1].nodeValue = ' ' + (pta.enable || "Enable Play Time Analytics");
+    }
+
+    // Update analytics show/hide button
+    const ptaBtn = document.getElementById('ptaShowBtn');
+    if (ptaBtn) {
+        const pane = document.getElementById('playTimeAnalyticsPane');
+        ptaBtn.textContent = pane?.style.display === 'block' 
+            ? (pta.hide || "Hide Analytics")
+            : (pta.show || "Show Analytics");
+    }
+
+    // Update new tab button titles
+    const newTabBtns = document.querySelectorAll('.game-window-btn:nth-child(1)');
+    newTabBtns.forEach(btn => {
+        btn.title = t.openInNewTab || 'Open in New Tab';
+    });
 }
 
 // --- Patch init to add auto-save checkbox and restore windows on load ---

@@ -59,7 +59,8 @@ const translations = {
             none: "No data yet."
         },
         randomGame: "Random Game",
-        noGamesForRandom: "No games match current filters. Please reset filters."
+        noGamesForRandom: "No games match current filters. Please reset filters.",
+        openInNewTab: "Open in New Tab",
     },
     es: {
         title: "App & Game Platform",
@@ -119,7 +120,8 @@ const translations = {
             none: "Sin datos aún."
         },
         randomGame: "Juego Aleatorio",
-        noGamesForRandom: "Ningún juego coincide con los filtros actuales. Restablece los filtros."
+        noGamesForRandom: "Ningún juego coincide con los filtros actuales. Restablece los filtros.",
+        openInNewTab: "Abrir en Nueva Pestaña",
     },
     fr: {
         title: "App & Game Platform",
@@ -179,7 +181,8 @@ const translations = {
             none: "Pas encore de données."
         },
         randomGame: "Jeu Aléatoire",
-        noGamesForRandom: "Aucun jeu ne correspond aux filtres actuels. Veuillez réinitialiser les filtres."
+        noGamesForRandom: "Aucun jeu ne correspond aux filtres actuels. Veuillez réinitialiser les filtres.",
+        openInNewTab: "Ouvrir dans un Nouvel Onglet",
     },
     de: {
         title: "App & Game Platform",
@@ -239,7 +242,8 @@ const translations = {
             none: "Noch keine Daten."
         },
         randomGame: "Zufälliges Spiel",
-        noGamesForRandom: "Kein Spiel entspricht den aktuellen Filtern. Bitte Filter zurücksetzen."
+        noGamesForRandom: "Kein Spiel entspricht den aktuellen Filtern. Bitte Filter zurücksetzen.",
+        openInNewTab: "In Neuem Tab Öffnen",
     },
     zh: {
         title: "应用和游戏集",
@@ -299,6 +303,7 @@ const translations = {
             none: "暂无数据。"
         },
         randomGame: "随机游戏",
-        noGamesForRandom: "没有游戏符合当前筛选条件，请重置筛选。"
+        noGamesForRandom: "没有游戏符合当前筛选条件，请重置筛选。",
+        openInNewTab: "在新标签页打开",
     }
 };

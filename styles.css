@@ -1416,7 +1416,7 @@ body, html {
 
 .game-window-controls {
     display: flex;
-    gap: 6px;
+    gap: 4px; /* Adjust spacing between buttons */
 }
 
 .game-window-btn {
@@ -1433,6 +1433,14 @@ body, html {
     padding: 0;
     margin-left: 2px;
     transition: background 0.15s;
+    font-family: system-ui, -apple-system, sans-serif; /* Better symbol rendering */
+}
+
+/* Style new tab symbol */
+.game-window-btn:nth-child(1) {
+    font-size: 1.2em;
+    line-height: 1;
+    padding-bottom: 3px;
 }
 
 .game-window-btn:hover {
