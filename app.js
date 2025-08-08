@@ -16,11 +16,32 @@ function isTouchDevice() {
         (navigator.msMaxTouchPoints > 0));
 }
 function getGamesPerPage() {
+    // Get viewport dimensions
     const width = window.innerWidth;
-    if (width <= 480) return 4;  // Small phones
-    if (width <= 768) return 6;  // Tablets/large phones
-    if (width <= 1024) return 8; // Small desktops
-    return 12; // Large screens
+    const height = window.innerHeight;
+
+    // Card dimensions (from CSS) + gap/padding
+    const cardWidth = 280; // Base card width
+    const cardGap = 20;  // Gap between cards
+    const pagePadding = 40; // Left + right padding
+    
+    // Calculate how many cards can fit in a row
+    const cardsPerRow = Math.floor((width - pagePadding) / (cardWidth + cardGap));
+    
+    // Calculate how many rows can fit in viewport (minus header/controls)
+    const headerHeight = 250; // Approximate height for header + controls
+    const cardHeight = 320;   // Approximate card height with content
+    const rowGap = 20;       // Gap between rows
+    const visibleRows = Math.floor((height - headerHeight) / (cardHeight + rowGap));
+
+    // Calculate total cards per page
+    let cardsPerPage = cardsPerRow * (visibleRows + 1); // Add one more row for partial visibility
+
+    // Minimum and maximum bounds
+    cardsPerPage = Math.max(4, Math.min(24, cardsPerPage));
+
+    // Round to nearest multiple of cardsPerRow for clean layout
+    return Math.floor(cardsPerPage / cardsPerRow) * cardsPerRow;
 }
 
 let gamesPerPage = getGamesPerPage();
