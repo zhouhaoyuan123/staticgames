@@ -38,18 +38,6 @@ window.noticesConfig = {
                 return !!window._showLangThemeWarning;
             }
         },
-        {
-            id: "about",
-            type: "info",
-            canClose: true,
-            content: {
-                en: "This platform is a collection of HTML5 games and demos. It is open-source and available on <a href='https://codeberg.org/zhou2012/StaticGames'>Codeberg</a>.",
-                es: "Esta plataforma es una colección de juegos y demos HTML5. Es de código abierto y está disponible en <a href='https://codeberg.org/zhou2012/StaticGames'>Codeberg</a>.",
-                fr: "Cette plateforme est une collection de jeux et démos HTML5. Elle est open-source et disponible sur <a href='https://codeberg.org/zhou2012/StaticGames'>Codeberg</a>.",
-                de: "Diese Plattform ist eine Sammlung von HTML5-Spielen und Demos. Sie ist Open-Source und auf <a href='https://codeberg.org/zhou2012/StaticGames'>Codeberg</a> verfügbar.",
-                zh: "该平台是一个HTML5游戏和演示的集合。它是开源的，并可在<a href='https://codeberg.org/zhou2012/StaticGames'>Codeberg</a>上获取。"
-            }
-        },
         // add more here
     ]
 };
