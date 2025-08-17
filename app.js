@@ -1399,8 +1399,13 @@ function formatTimerTime(ms) {
 }
 
 function startGameTimer() {
-    const minutes = parseFloat(document.getElementById('timerMinutes').value);
-    if (isNaN(minutes) || minutes < 0.1) return;
+    let minutes = document.getElementById('timerMinutes').value;
+    // Validate and format number
+    minutes = parseFloat(minutes).toFixed(1);
+    if (isNaN(minutes) || minutes < 0.1) {
+        document.getElementById('timerMinutes').value = "0.1";
+    }
+    document.getElementById('timerMinutes').value = minutes;
     timerState.duration = minutes * 60 * 1000;
     timerState.remaining = timerState.duration;
     timerState.running = true;
