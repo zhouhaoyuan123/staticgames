@@ -925,10 +925,18 @@ function createGameWindow({ id, title, url, game }) {
     const resizer = document.createElement('div');
     resizer.className = 'game-window-resizer';
     resizer.onmousedown = e => resizeGameWindow(e, win);
+    // Add loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'game-window-loading';
+    loadingDiv.textContent = translations[currentLang].loading || "Loading...";
 
+    iframe.onload = () => {
+        loadingDiv.style.display = 'none';
+    };
     // Assemble
     win.appendChild(header);
     win.appendChild(iframe);
+    win.appendChild(loadingDiv);
     win.appendChild(recDiv);
     win.appendChild(resizer);
 

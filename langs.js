@@ -63,6 +63,7 @@ const translations = {
         openInNewTab: "Open in New Tab",
         copyUrl: "Copy URL",
         urlCopied: "URL Copied!",
+        loading: "Loading...",
     },
     es: {
         title: "App & Game Platform",
@@ -126,6 +127,7 @@ const translations = {
         openInNewTab: "Abrir en Nueva Pestaña",
         copyUrl: "Copiar URL",
         urlCopied: "¡URL Copiada!",
+        loading: "Cargando...",
     },
     fr: {
         title: "App & Game Platform",
@@ -189,6 +191,7 @@ const translations = {
         openInNewTab: "Ouvrir dans un Nouvel Onglet",
         copyUrl: "Copier l'URL",
         urlCopied: "URL Copiée !",
+        loading: "Chargement...",
     },
     de: {
         title: "App & Game Platform",
@@ -252,6 +255,7 @@ const translations = {
         openInNewTab: "In Neuem Tab Öffnen",
         copyUrl: "URL Kopieren",
         urlCopied: "URL Kopiert!",
+        loading: "Wird geladen...",
     },
     zh: {
         title: "应用和游戏集",
@@ -315,5 +319,6 @@ const translations = {
         openInNewTab: "在新标签页打开",
         copyUrl: "复制链接",
         urlCopied: "链接已复制！",
+        loading: "加载中...",
     }
 };
