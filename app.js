@@ -846,6 +846,26 @@ function createGameWindow({ id, title, url, game }) {
     newTabBtn.onmousedown = e => e.stopPropagation();
     newTabBtn.ontouchstart = e => e.stopPropagation();
 
+    // Add Copy URL button
+    const copyUrlBtn = document.createElement('button');
+    copyUrlBtn.className = 'game-window-btn';
+    copyUrlBtn.title = translations[currentLang].copyUrl || 'Copy URL';
+    copyUrlBtn.innerHTML = '🔗';
+    copyUrlBtn.onclick = e => {
+        e.stopPropagation();
+        const gameUrl = new URL(window.location.href);
+        gameUrl.searchParams.set('game', id);
+        navigator.clipboard.writeText(gameUrl.toString()).then(() => {
+            const originalTitle = copyUrlBtn.title;
+            copyUrlBtn.title = translations[currentLang].urlCopied || 'URL Copied!';
+            setTimeout(() => {
+                copyUrlBtn.title = originalTitle;
+            }, 2000);
+        });
+    };
+    copyUrlBtn.onmousedown = e => e.stopPropagation();
+    copyUrlBtn.ontouchstart = e => e.stopPropagation();
+
     // Maximize/restore button
     const maxBtn = document.createElement('button');
     maxBtn.className = 'game-window-btn';
@@ -883,6 +903,7 @@ function createGameWindow({ id, title, url, game }) {
     closeBtn.ontouchstart = e => e.stopPropagation();
 
     controls.appendChild(newTabBtn);
+    controls.appendChild(copyUrlBtn);
     controls.appendChild(maxBtn);
     controls.appendChild(closeBtn);
 
@@ -1841,6 +1862,15 @@ function updateUIText() {
 
 // --- Patch init to add auto-save checkbox and restore windows on load ---
 function init() {
+    // Add at the start of init function
+    // Check for game ID in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = parseInt(urlParams.get('game'), 10);
+    if (!isNaN(gameId)) {
+        // Delay game loading slightly to ensure everything is initialized
+        setTimeout(() => loadGame(gameId), 100);
+    }
+
     // Add language selector to controls
     const controls = document.querySelector('.controls');
     if (!document.getElementById('langSelector')) {
