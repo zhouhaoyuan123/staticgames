@@ -1403,7 +1403,7 @@ function startGameTimer() {
     // Validate and format number
     minutes = parseFloat(minutes).toFixed(1);
     if (isNaN(minutes) || minutes < 0.1) {
-        document.getElementById('timerMinutes').value = "0.1";
+        minutes = 0.1;
     }
     document.getElementById('timerMinutes').value = minutes;
     timerState.duration = minutes * 60 * 1000;
