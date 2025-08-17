@@ -1455,7 +1455,16 @@ body, html {
     min-height: 120px;
     position: relative;
 }
-
+.game-window-resizer {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    right: 0;
+    bottom: 0;
+    cursor: se-resize;
+    z-index: 10;
+    background: transparent;
+}
 .game-window-loading {
     position: absolute;
     top: 0;
