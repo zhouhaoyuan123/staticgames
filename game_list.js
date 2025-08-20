@@ -188,4 +188,28 @@ const gameDatabase = [
         },
         updated: 20250720
         },
+        {
+        id: 7,
+        name: "Repo Viewer",
+        name_i18n: {
+            en: "Repo Viewer",
+        },
+        author: "Aaron",
+        author_i18n: {
+            en: "Aaron",
+            es: "Aarón",
+            fr: "Aaron",
+            de: "Aaron",
+            zh: "艾伦"
+        },
+        url: "https://repostats.netlify.app",
+        email: "a@example.com",
+        tags: ["Aaron","mobile-friendly","Tools","Github"],
+        popularity: 0,
+        description: "Show off your Github repos with stats and charts",
+        description_i18n: {
+            en: "Show off your Github repos with stats and charts",
+        },
+        updated: 20250820
+        },
 ];
